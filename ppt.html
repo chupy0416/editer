@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ppt</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@400;700&display=swap">
+<style>
+:root{--bg:#eceef2;--panel:#fff;--ink:#1d2330;--mute:#6b7385;--line:#d6dae2;--acc:#3b4cca;--acc-ink:#fff;--stage:#dfe2e9;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171f;--panel:#1d212c;--ink:#e8eaf0;--mute:#8d95a8;--line:#323848;--acc:#7a8bff;--acc-ink:#10131c;--stage:#0f1218}}
+:root[data-theme="dark"]{--bg:#14171f;--panel:#1d212c;--ink:#e8eaf0;--mute:#8d95a8;--line:#323848;--acc:#7a8bff;--acc-ink:#10131c;--stage:#0f1218}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:13px/1.4 "Noto Sans KR",system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:6px 8px;display:flex;flex-direction:column;gap:6px;max-height:40vh;overflow-y:auto}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.grp{display:flex;gap:5px;align-items:center;padding-right:8px;border-right:1px solid var(--line)}
+.grp:last-child{border:0}
+button,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px 8px;cursor:pointer}
+button:hover,select:hover{border-color:var(--acc)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+button.pri{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:700}
+label.f{display:flex;gap:4px;align-items:center;color:var(--mute);font-size:12px}
+input[type=number]{width:54px;font:inherit;padding:3px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+input[type=color]{width:28px;height:24px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
+input[type=range]{width:70px}
+main{flex:1;display:flex;min-height:0}
+#side{width:196px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+#sbar{display:flex;flex-wrap:wrap;gap:5px;padding:8px;border-bottom:1px solid var(--line)}
+#list{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:10px}
+.item{display:flex;gap:6px;align-items:flex-start;cursor:pointer}
+.item small{color:var(--mute);width:16px;text-align:right;padding-top:2px}
+.thumb{position:relative;width:150px;height:84px;border:2px solid var(--line);border-radius:4px;overflow:hidden;flex:none}
+.item.on .thumb{border-color:var(--acc)}
+#area{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--stage)}
+#stwrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:12px}
+#stagebox{position:relative;box-shadow:0 2px 14px rgba(0,0,0,.3);flex:none}
+#notes{height:64px;resize:none;border:0;border-top:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;padding:8px 12px}
+.slide{position:absolute;left:0;top:0;width:960px;height:540px;transform-origin:0 0;overflow:hidden}
+.el{position:absolute;touch-action:none;line-height:1.25;user-select:none}
+.el [contenteditable=true]{user-select:text;outline:none;cursor:text}
+.tx{position:absolute;inset:0;padding:8px;display:flex;flex-direction:column;white-space:pre-wrap;overflow:hidden;word-break:break-word}
+.el img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+.el table{width:100%;height:100%;border-collapse:collapse;table-layout:fixed}
+.el td{border:1px solid #8886;padding:6px;vertical-align:middle;word-break:break-word}
+.edit .el{cursor:move}
+.el.sel{outline:2px solid var(--acc)}
+.hd{position:absolute;width:11px;height:11px;background:#fff;border:2px solid var(--acc);border-radius:3px}
+.hd.nw{left:-6px;top:-6px;cursor:nwse-resize}.hd.n{left:calc(50% - 6px);top:-6px;cursor:ns-resize}.hd.ne{right:-6px;top:-6px;cursor:nesw-resize}
+.hd.e{right:-6px;top:calc(50% - 6px);cursor:ew-resize}.hd.se{right:-6px;bottom:-6px;cursor:nwse-resize}.hd.s{left:calc(50% - 6px);bottom:-6px;cursor:ns-resize}
+.hd.sw{left:-6px;bottom:-6px;cursor:nesw-resize}.hd.w{left:-6px;top:calc(50% - 6px);cursor:ew-resize}
+.hd.rot{left:calc(50% - 6px);top:-26px;border-radius:50%;cursor:grab}
+#pres{position:fixed;inset:0;background:#000;z-index:9;display:none;cursor:none}
+#pres.on{display:block}
+#pcount{position:fixed;right:14px;bottom:10px;color:#fff8;font-size:12px;z-index:10}
+.stw{overflow:hidden}
+.tr-fade{animation:fd .5s}.tr-slide{animation:sl .45s}.tr-zoom{animation:zm .45s}
+@keyframes fd{from{opacity:0}}@keyframes sl{from{opacity:0;transform:translateX(60px)}}@keyframes zm{from{opacity:0;transform:scale(.9)}}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);width:min(520px,92vw)}
+dialog textarea{width:100%;font:12px monospace;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px;margin:8px 0}
+@media (prefers-reduced-motion:reduce){.stw{animation:none!important}}
+@media (max-width:760px){main{flex-direction:column}#side{width:auto;flex-direction:row;border-right:0;border-bottom:1px solid var(--line)}#sbar{flex-direction:column;border:0}#list{flex-direction:row;overflow-x:auto;overflow-y:hidden}.item small{display:none}.thumb{width:110px;height:62px}}
+
+header{padding:0;gap:0;max-height:none;overflow:visible;flex-direction:column}
+#tbar{display:flex;align-items:center;gap:12px;background:#c43e1c;color:#fff;padding:4px 10px}
+#tbar button{background:#ffffff22;color:#fff;border-color:#ffffff55;padding:2px 9px}
+#qat{display:flex;gap:4px}#ttl{flex:1;text-align:center;font-weight:700}#sv{font-size:11px;opacity:.9}
+#tabs{display:flex;background:#c43e1c;padding:0 8px;gap:2px;overflow-x:auto}
+.tab{background:transparent;color:#fff;border:0;border-radius:6px 6px 0 0;padding:6px 14px;white-space:nowrap}
+.tab:hover{background:#ffffff22}.tab.on{background:var(--panel);color:#c43e1c;font-weight:700}.tab.f{background:#8e2f17}
+#rib{background:var(--panel);border-bottom:1px solid var(--line)}
+.rb{display:flex;padding:6px 8px;overflow-x:auto}.rb[hidden]{display:none}
+.g{display:flex;flex-direction:column;justify-content:space-between;gap:4px;padding:0 10px;border-right:1px solid var(--line);flex:none}
+.gi{display:flex;gap:5px;align-items:center;flex-wrap:wrap;min-height:30px;max-width:420px}
+.gl{text-align:center;color:var(--mute);font-size:11px}
+#status{display:flex;align-items:center;gap:8px;padding:3px 12px;background:var(--panel);border-top:1px solid var(--line);font-size:12px;color:var(--mute)}
+#status .sp{flex:1}#zr{width:130px}#status button{padding:1px 8px}
+#stwrap{overflow:auto;align-items:flex-start;justify-content:flex-start}#stagebox{margin:auto}
+@media (max-width:760px){main{flex-direction:column}}
+#cdlg{width:min(680px,94vw)}#cdlg .crow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.cg{border-collapse:collapse}.cg th,.cg td{padding:2px}.cg input{width:92px;font:inherit;padding:3px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink)}.cg input[type=color]{width:28px;height:24px;padding:0}
+</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+<header>
+<div id="tbar"><div id="qat"><button id="bSave" title="저장 (Ctrl+S)">저장</button><button id="bUndo" title="실행 취소 (Ctrl+Z)">↶</button><button id="bRedo" title="다시 실행 (Ctrl+Y)">↷</button><button id="bQ" title="처음부터 시작 (F5)">▶</button></div><div id="ttl">프레젠테이션 - 슬라이드 스튜디오</div><span id="sv">자동 저장</span></div>
+<nav id="tabs"><button class="tab f" data-p="p0">파일</button><button class="tab on" data-p="p1">홈</button><button class="tab" data-p="p2">삽입</button><button class="tab" data-p="p3">디자인</button><button class="tab" data-p="p4">전환</button><button class="tab" data-p="p5">슬라이드 쇼</button><button class="tab" data-p="p6">보기</button></nav>
+<div id="rib">
+ <div class="rb" id="p0" hidden>
+  <div class="g"><div class="gi"><button id="bNew">새 프레젠테이션</button><button id="bImp">열기 (.pptx / .json)</button><button id="bPptx">PPTX로 저장</button><button id="bPdf">PDF로 저장</button><button id="bExp">JSON으로 저장</button><button id="bKeys">단축키 보기</button><input type="file" id="fOpen" accept=".pptx,.json" hidden></div><div class="gl">파일</div></div>
+ </div>
+ <div class="rb" id="p1">
+  <div class="g"><div class="gi"><button id="bPaste">붙여넣기</button><button id="bCut">잘라내기</button><button id="bCopy">복사</button></div><div class="gl">클립보드</div></div>
+  <div class="g"><div class="gi"><select id="lay"><option value="blank">빈 화면</option><option value="title">제목</option><option value="content">제목+내용</option><option value="two">2단</option></select><button id="sAdd" title="Ctrl+M">새 슬라이드</button><button id="sDup">복제</button><button id="sDel">삭제</button></div><div class="gl">슬라이드</div></div>
+  <div class="g"><div class="gi"><select id="pFont"><option>Noto Sans KR</option><option>Noto Serif KR</option><option>Georgia</option><option>Arial</option><option>Courier New</option></select><input type="number" id="pSize" min="8" max="300" value="28" title="글자 크기"><button id="bB" title="Ctrl+B"><b>B</b></button><button id="bI" title="Ctrl+I"><i>I</i></button><button id="bU" title="Ctrl+U"><u>U</u></button><label class="f">글자색<input type="color" id="pColor" value="#1d2330"></label></div><div class="gl">글꼴</div></div>
+  <div class="g"><div class="gi"><button id="aL" title="Ctrl+L">왼쪽</button><button id="aC" title="Ctrl+E">가운데</button><button id="aR" title="Ctrl+R">오른쪽</button></div><div class="gl">단락</div></div>
+  <div class="g"><div class="gi"><label class="f">채움<input type="color" id="pFill" value="#3b4cca"></label><label class="f">윤곽<input type="color" id="pStroke" value="#000000"></label><input type="number" id="pSw" min="0" max="30" value="0" title="윤곽 두께"><label class="f"><input type="checkbox" id="pSh">그림자</label></div><div class="gl">그리기</div></div>
+  <div class="g"><div class="gi"><select id="pAl"><option value="">맞춤</option><option value="l">왼쪽 맞춤</option><option value="c">가운데 맞춤</option><option value="r">오른쪽 맞춤</option><option value="t">위쪽 맞춤</option><option value="m">중간 맞춤</option><option value="b">아래쪽 맞춤</option></select><button id="bFront">맨 앞으로</button><button id="bBack">맨 뒤로</button><label class="f">회전<input type="number" id="pRot" value="0"></label><label class="f">투명도<input type="range" id="pOp" min="10" max="100" value="100"></label></div><div class="gl">정렬</div></div>
+  <div class="g"><div class="gi"><button id="bDup" title="Ctrl+D">복제</button><button id="bDel" title="Delete">삭제</button><button id="bRow">표 행+</button><button id="bCol">표 열+</button><button id="bRowD">표 행−</button><button id="bColD">표 열−</button><button id="bData">차트 편집</button></div><div class="gl">편집</div></div>
+ </div>
+ <div class="rb" id="p2" hidden>
+  <div class="g"><div class="gi"><button id="bText">텍스트 상자</button><select id="sh"><option value="">도형</option><option value="rect">사각형</option><option value="round">둥근 사각형</option><option value="ellipse">원</option><option value="tri">삼각형</option><option value="dia">마름모</option><option value="star">별</option><option value="arrow">화살표</option><option value="line">선</option></select></div><div class="gl">도형</div></div>
+  <div class="g"><div class="gi"><button id="bTbl">표</button><button id="bImg">이미지</button><input type="file" id="file" accept="image/*" hidden><select id="chs"><option value="">차트</option><option value="bar">막대</option><option value="line">꺾은선</option><option value="pie">원형</option></select></div><div class="gl">표 · 이미지 · 차트</div></div>
+  <div class="g"><div class="gi"><label class="f"><input type="checkbox" id="pNum">슬라이드 번호</label></div><div class="gl">텍스트</div></div>
+ </div>
+ <div class="rb" id="p3" hidden>
+  <div class="g"><div class="gi"><select id="pTheme"></select></div><div class="gl">테마</div></div>
+  <div class="g"><div class="gi"><label class="f">배경<input type="color" id="pBg" value="#ffffff"><input type="color" id="pBg2" value="#dddddd"></label><button id="bBg1">단색</button></div><div class="gl">배경 서식</div></div>
+ </div>
+ <div class="rb" id="p4" hidden>
+  <div class="g"><div class="gi"><select id="pTr"><option value="none">없음</option><option value="fade">페이드</option><option value="slide">밀기</option><option value="zoom">확대</option></select><button id="bTrAll">모두 적용</button></div><div class="gl">슬라이드 전환</div></div>
+ </div>
+ <div class="rb" id="p5" hidden>
+  <div class="g"><div class="gi"><button class="pri" id="bPlayAll" title="F5">처음부터</button><button id="bPlay" title="Shift+F5">현재 슬라이드부터</button></div><div class="gl">슬라이드 쇼 시작</div></div>
+ </div>
+ <div class="rb" id="p6" hidden>
+  <div class="g"><div class="gi"><label class="f"><input type="checkbox" id="vNotes" checked>노트</label><button id="b100">100%</button></div><div class="gl">표시</div></div>
+ </div>
+</div>
+</header>
+<main>
+ <aside id="side"><div id="list"></div></aside>
+ <section id="area"><div id="stwrap"><div id="stagebox"></div></div><textarea id="notes" placeholder="발표자 노트를 입력하세요"></textarea></section>
+</main>
+<footer id="status"><span id="stat"></span><span class="sp"></span><button id="bZm">−</button><input type="range" id="zr" min="20" max="300" value="100"><button id="bZp">+</button><span id="zl">100%</span><button id="bFit">슬라이드 맞춤</button></footer>
+<div id="pres"></div><div id="pcount" hidden></div>
+<dialog id="cdlg"><div class="crow"><label>종류 <select id="cType"><option value="bar">막대</option><option value="line">꺾은선</option><option value="pie">원형</option></select></label><label>제목 <input id="cTitle"></label><label><input type="checkbox" id="cVal">값 표시</label><label><input type="checkbox" id="cLeg">범례</label></div><div id="cGrid" style="overflow:auto;max-height:50vh"></div><div class="crow"><button id="cAddR">행 추가</button><button id="cDelR">행 삭제</button><button id="cAddC">계열 추가</button><button id="cDelC">계열 삭제</button></div><div><button class="pri" id="cOk">적용</button> <button id="cNo">취소</button></div></dialog>
+<dialog id="dlg"><div id="dT"></div><textarea id="dA" rows="10"></textarea><div><button class="pri" id="dOk">확인</button> <button id="dNo">취소</button></div></dialog>
+
+<script>
+const W=960,H=540,$=id=>document.getElementById(id),uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const TM={'라이트':{bg:'#ffffff',t:'#1d2330',b:'#4a5266',a:'#3b4cca',f:'Noto Sans KR'},'다크':{bg:'#1b1f2a',t:'#f4f5f8',b:'#b8bfd0',a:'#7a8bff',f:'Noto Sans KR'},'오션':{bg:'#eaf4f8',t:'#0b3b53',b:'#2f5d73',a:'#13a4c6',f:'Noto Sans KR'},'숲':{bg:'#f1f4ea',t:'#233a22',b:'#4d6247',a:'#5b8c3a',f:'Noto Serif KR'},'노을':{bg:'#fff3ea',t:'#4a1f1a',b:'#7a4a3f',a:'#e0603f',f:'Noto Serif KR'}};
+const PAL=a=>[a,'#e0603f','#f2b134','#2fa38a','#8a5bd6','#d6457a'];
+const P={rect:'<rect width="100" height="100"/>',round:'<rect width="100" height="100" rx="12"/>',ellipse:'<ellipse cx="50" cy="50" rx="50" ry="50"/>',tri:'<polygon points="50,0 100,100 0,100"/>',dia:'<polygon points="50,0 100,50 50,100 0,50"/>',star:'<polygon points="50,0 61,35 98,35 68,57 79,91 50,70 21,91 32,57 2,35 39,35"/>',arrow:'<polygon points="0,28 60,28 60,0 100,50 60,100 60,72 0,72"/>',line:'<line x1="0" y1="50" x2="100" y2="50"/>'};
+let S;try{S=JSON.parse(localStorage.getItem('slides-v2'))}catch(e){}
+function TH(){return TM[S.theme]||TM['라이트']}
+function tx(x,y,w,h,text,size,color,bold){return {id:uid(),type:'s',shape:'none',x,y,w,h,rot:0,op:1,text,size,color,bold,al:'left',va:'top',font:TH().f}}
+function mkSlide(k){const t=TH(),e=[];
+ if(k==='title')e.push(tx(80,170,800,110,'발표 제목',60,t.t,1),tx(80,300,800,60,'부제목을 입력하세요',28,t.b));
+ else if(k==='content')e.push(tx(60,40,840,80,'제목',44,t.t,1),tx(60,140,840,340,'• 첫 번째 내용\n• 두 번째 내용\n• 세 번째 내용',28,t.b));
+ else if(k==='two')e.push(tx(60,40,840,80,'제목',44,t.t,1),tx(60,140,400,340,'• 왼쪽 내용',26,t.b),tx(500,140,400,340,'• 오른쪽 내용',26,t.b));
+ return {bg:t.bg,els:e,notes:'',tr:'none'}}
+if(!S||!S.slides||!S.slides.length){S={theme:'라이트',num:false,cur:0,slides:[]};S.slides.push(mkSlide('title'))}
+S.sel=[];S.cur=Math.min(S.cur||0,S.slides.length-1);
+let zoom=0,lf=false,scale=1,hist=[JSON.stringify(S.slides)],hi=0,clip=null;
+const cur=()=>S.slides[S.cur],sels=()=>cur().els.filter(e=>S.sel.includes(e.id));
+function commit(){const j=JSON.stringify(S.slides);try{localStorage.setItem('slides-v2',JSON.stringify({theme:S.theme,num:S.num,cur:S.cur,slides:S.slides}))}catch(e){}
+ if(j===hist[hi])return;hist=hist.slice(0,hi+1);hist.push(j);if(hist.length>80)hist.shift();hi=hist.length-1}
+function undo(d){const n=hi+d;if(n<0||n>=hist.length)return;hi=n;S.slides=JSON.parse(hist[hi]);S.cur=Math.min(S.cur,S.slides.length-1);S.sel=[];render()}
+
+function svgOf(el){if(el.shape==='none')return'';const ln=el.shape==='line';
+ return '<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible" fill="'+(ln?'none':el.fill)+'" stroke="'+(el.stroke||(ln?el.fill:'none'))+'" stroke-width="'+(el.sw||(ln?3:0))+'">'+P[el.shape].replace(/<(\w+) /,'<$1 vector-effect="non-scaling-stroke" ')+'</svg>'}
+function chartSvg(el){const d=el.data,mx=Math.max(...d.map(x=>x.v),1),C=PAL(el.fill),c=el.color||'#333';
+ let s='<svg viewBox="0 0 400 300" style="width:100%;height:100%" font-size="14" fill="'+c+'" text-anchor="middle">';
+ if(el.ch==='pie'){const tot=d.reduce((a,x)=>a+x.v,0)||1;let a0=-Math.PI/2;
+  d.forEach((x,i)=>{const a1=a0+Math.min(x.v/tot,.9999)*2*Math.PI,lg=a1-a0>Math.PI?1:0;
+   s+='<path d="M150 150L'+(150+120*Math.cos(a0))+' '+(150+120*Math.sin(a0))+'A120 120 0 '+lg+' 1 '+(150+120*Math.cos(a1))+' '+(150+120*Math.sin(a1))+'Z" fill="'+C[i%6]+'"/><rect x="290" y="'+(30+i*26)+'" width="14" height="14" fill="'+C[i%6]+'"/><text x="310" y="'+(42+i*26)+'" text-anchor="start">'+esc(x.l)+' '+x.v+'</text>';a0=a1})}
+ else{const bw=340/d.length,pts=d.map((x,i)=>[40+bw*i+bw/2,260-x.v/mx*220]);
+  s+='<line x1="30" y1="260" x2="390" y2="260" stroke="'+c+'"/>';
+  if(el.ch==='bar')d.forEach((x,i)=>{s+='<rect x="'+(pts[i][0]-bw*.35)+'" y="'+pts[i][1]+'" width="'+bw*.7+'" height="'+(260-pts[i][1])+'" fill="'+C[0]+'"/>'});
+  else{s+='<polyline fill="none" stroke="'+C[0]+'" stroke-width="3" points="'+pts.join(' ')+'"/>';pts.forEach(p=>{s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="5" fill="'+C[0]+'"/>'})}
+  d.forEach((x,i)=>{s+='<text x="'+pts[i][0]+'" y="282">'+esc(x.l)+'</text><text x="'+pts[i][0]+'" y="'+(pts[i][1]-8)+'">'+x.v+'</text>'})}
+ return s+'</svg>'}
+function geo(n,el){const s=n.style;s.left=el.x+'px';s.top=el.y+'px';s.width=el.w+'px';s.height=el.h+'px';s.transform='rotate('+(el.rot||0)+'deg)';s.opacity=el.op??1;s.filter=el.sh?'drop-shadow(3px 5px 6px rgba(0,0,0,.35))':''}
+function fnt(n,el){const s=n.style;s.fontFamily='"'+(el.font||'Noto Sans KR')+'",sans-serif';s.fontSize=(el.size||24)+'px';s.color=el.color||'#000';s.fontWeight=el.bold?700:400;s.fontStyle=el.it?'italic':'normal';s.textDecoration=el.ul?'underline':'none';s.textAlign=el.al||'left'}
+function mk(el){const n=document.createElement('div');n.className='el';n.dataset.id=el.id;geo(n,el);
+ if(el.type==='i')n.innerHTML='<img src="'+el.src+'" alt="">';
+ else if(el.type==='ch')n.innerHTML=chartSvg(el);
+ else if(el.type==='tb'){fnt(n,el);n.innerHTML='<table>'+el.data.map((r,i)=>'<tr>'+r.map((c,j)=>'<td data-r="'+i+'" data-c="'+j+'" style="'+(i?'':'background:'+el.fill+';color:#fff;font-weight:700')+'">'+esc(c)+'</td>').join('')+'</tr>').join('')+'</table>'}
+ else{n.innerHTML=svgOf(el)+'<div class="tx"></div>';const d=n.lastChild;fnt(d,el);d.style.justifyContent=el.va==='middle'?'center':'flex-start';d.textContent=el.text}
+ return n}
+function paint(host,sl,sc,edit){const s=document.createElement('div');s.className='slide'+(edit?' edit':'');
+ s.style.background=sl.bg2?'linear-gradient(135deg,'+sl.bg+','+sl.bg2+')':sl.bg;s.style.transform='scale('+sc+')';
+ sl.els.forEach(el=>{const n=mk(el);if(edit)wire(n,el);s.appendChild(n)});
+ if(S.num){const d=document.createElement('div');d.style.cssText='position:absolute;right:28px;bottom:16px;font-size:18px;color:'+TH().b;d.textContent=S.slides.indexOf(sl)+1;s.appendChild(d)}
+ host.appendChild(s);return s}
+function wire(n,el){const one=S.sel.length===1&&S.sel[0]===el.id;
+ if(S.sel.includes(el.id))n.classList.add('sel');
+ if(one){['nw','n','ne','e','se','s','sw','w'].forEach(d=>{const h=document.createElement('i');h.className='hd '+d;h.onpointerdown=e=>{e.stopPropagation();drag(e,'size',d)};n.appendChild(h)});
+  const r=document.createElement('i');r.className='hd rot';r.onpointerdown=e=>{e.stopPropagation();drag(e,'rot')};n.appendChild(r)}
+ n.onpointerdown=e=>{if(e.target.isContentEditable)return;
+  if(e.shiftKey){S.sel=S.sel.includes(el.id)?S.sel.filter(x=>x!==el.id):[...S.sel,el.id];stage();props();return}
+  if(!S.sel.includes(el.id)){S.sel=[el.id];stage();props()}drag(e,'move')};
+ n.ondblclick=e=>{if(el.type==='ch'){chartDlg(el);return}const t=el.type==='tb'?e.target.closest('td'):el.type==='s'?n.querySelector('.tx'):null;if(!t)return;
+  t.contentEditable='true';t.focus();const r=document.createRange();r.selectNodeContents(t);const g=getSelection();g.removeAllRanges();g.addRange(r);
+  t.onkeydown=TABNAV(el,t);t.onblur=()=>{if(el.type==='tb')el.data[+t.dataset.r][+t.dataset.c]=t.innerText;else el.text=t.innerText;commit();stage();thumbs()}}}
+function stage(){const a=$('stwrap');scale=zoom?zoom/100:Math.max(.2,Math.min((a.clientWidth-24)/W,(a.clientHeight-24)/H));$('zl').textContent=Math.round(scale*100)+'%';$('zr').value=Math.round(scale*100);$('stat').textContent='슬라이드 '+(S.cur+1)+' / '+S.slides.length;
+ const b=$('stagebox');b.style.width=W*scale+'px';b.style.height=H*scale+'px';b.innerHTML='';
+ const s=paint(b,cur(),scale,true);s.onpointerdown=e=>{if(e.target===s&&S.sel.length){S.sel=[];stage();props()}}}
+function thumbs(){const L=$('list');L.innerHTML='';
+ S.slides.forEach((sl,i)=>{const it=document.createElement('div');it.className='item'+(i===S.cur?' on':'');it.draggable=true;
+  it.innerHTML='<small>'+(i+1)+'</small><div class="thumb"></div>';paint(it.lastChild,sl,150/W,false);
+  it.onclick=()=>{lf=true;S.cur=i;S.sel=[];render()};
+  it.ondragstart=e=>e.dataTransfer.setData('text',i);it.ondragover=e=>e.preventDefault();
+  it.ondrop=e=>{e.preventDefault();const f=+e.dataTransfer.getData('text');if(f===i)return;const [m]=S.slides.splice(f,1);S.slides.splice(i,0,m);S.cur=i;commit();render()};
+  L.appendChild(it)})}
+function props(){const e=sels()[0],sl=cur();$('pBg').value=sl.bg;$('pBg2').value=sl.bg2||'#dddddd';$('pTr').value=sl.tr||'none';$('pNum').checked=!!S.num;$('pTheme').value=S.theme;
+ if(!e)return;if(e.font)$('pFont').value=e.font;$('pSize').value=e.size||24;$('pColor').value=e.color||'#000000';$('pFill').value=e.fill||'#3b4cca';
+ $('pStroke').value=e.stroke||'#000000';$('pSw').value=e.sw||0;$('pOp').value=(e.op??1)*100;$('pRot').value=e.rot||0;$('pSh').checked=!!e.sh}
+function render(){stage();thumbs();props();$('notes').value=cur().notes||''}
+
+function drag(ev,mode,dir){const els=sels(),o=els.map(e=>[e.x,e.y,e.w,e.h]),sx=ev.clientX,sy=ev.clientY,e0=els[0];let cx,cy;
+ if(mode==='rot'){const r=$('stagebox').querySelector('[data-id="'+e0.id+'"]').getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2}
+ const mv=e=>{const dx=(e.clientX-sx)/scale,dy=(e.clientY-sy)/scale;
+  if(mode==='move'){els.forEach((el,i)=>{el.x=Math.round(o[i][0]+dx);el.y=Math.round(o[i][1]+dy)});
+   if(els.length===1){const a=e0.x+e0.w/2,b=e0.y+e0.h/2;if(Math.abs(a-W/2)<6)e0.x=Math.round(W/2-e0.w/2);if(Math.abs(b-H/2)<6)e0.y=Math.round(H/2-e0.h/2)}}
+  else if(mode==='size'){const [x,y,w,h]=o[0];let nx=x,ny=y,nw=w,nh=h;
+   if(dir.includes('e'))nw=Math.max(20,w+dx);if(dir.includes('s'))nh=Math.max(10,h+dy);
+   if(dir.includes('w')){nw=Math.max(20,w-dx);nx=x+w-nw}if(dir.includes('n')){nh=Math.max(10,h-dy);ny=y+h-nh}
+   Object.assign(e0,{x:Math.round(nx),y:Math.round(ny),w:Math.round(nw),h:Math.round(nh)})}
+  else{let r=Math.round(Math.atan2(e.clientY-cy,e.clientX-cx)*180/Math.PI+90);if(e.shiftKey)r=Math.round(r/15)*15;e0.rot=r}
+  els.forEach(el=>{const n=$('stagebox').querySelector('[data-id="'+el.id+'"]');if(n)geo(n,el)})};
+ const up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);commit();thumbs();props()};
+ addEventListener('pointermove',mv);addEventListener('pointerup',up)}
+
+function add(el){Object.assign(el,{id:uid(),rot:0,op:1});cur().els.push(el);S.sel=[el.id];commit();render()}
+function apply(fn){sels().forEach(fn);commit();stage();thumbs()}
+const bind=(id,ev,fn)=>{$(id)[ev]=fn};
+function ask(t,v){return new Promise(r=>{$('dT').textContent=t;$('dA').value=v;const d=$('dlg');d.showModal();$('dOk').onclick=()=>{d.close();r($('dA').value)};$('dNo').onclick=()=>{d.close();r(null)};d.oncancel=()=>r(null)})}
+bind('bText','onclick',()=>{const t=TH();add({type:'s',shape:'none',x:120,y:200,w:420,h:80,text:'새 텍스트',size:28,color:t.t,font:t.f,al:'left',va:'top'})});
+bind('sh','onchange',e=>{const v=e.target.value;if(!v)return;const t=TH(),ln=v==='line';add({type:'s',shape:v,x:300,y:ln?250:170,w:ln?320:220,h:ln?20:180,fill:t.a,stroke:'',sw:0,text:'',size:24,color:'#ffffff',font:t.f,al:'center',va:'middle'});e.target.value=''});
+bind('bTbl','onclick',()=>{const t=TH();add({type:'tb',x:130,y:150,w:700,h:180,data:[['제목 1','제목 2','제목 3'],['','',''],['','','']],size:22,color:t.t,fill:t.a,font:t.f,al:'left'})});
+bind('chs','onchange',e=>{const v=e.target.value;if(!v)return;const t=TH();add({type:'ch',ch:v,x:180,y:100,w:600,h:350,color:t.t,fill:t.a,data:[{l:'1분기',v:30},{l:'2분기',v:55},{l:'3분기',v:42},{l:'4분기',v:70}]});e.target.value=''});
+bind('bImg','onclick',()=>$('file').click());
+bind('file','onchange',ev=>{const f=ev.target.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(520/im.width,380/im.height,1);add({type:'i',x:100,y:80,w:Math.round(im.width*k),h:Math.round(im.height*k),src:r.result})};im.src=r.result};r.readAsDataURL(f);ev.target.value=''});
+bind('bData','onclick',async()=>{const e=sels()[0];if(!e||e.type!=='ch')return;const v=await ask('한 줄에 하나씩 "라벨,값" 형식으로 입력하세요',e.data.map(x=>x.l+','+x.v).join('\n'));if(v===null)return;
+ const d=v.split('\n').map(l=>l.split(',')).filter(a=>a.length>1&&a[0].trim()).map(a=>({l:a[0].trim(),v:Math.max(0,parseFloat(a[1])||0)}));if(d.length){e.data=d;commit();stage();thumbs()}});
+bind('bRow','onclick',()=>{const e=sels()[0];if(e&&e.type==='tb'){e.data.push(e.data[0].map(()=>''));e.h+=50;commit();stage();thumbs()}});
+bind('bCol','onclick',()=>{const e=sels()[0];if(e&&e.type==='tb'){e.data.forEach(r=>r.push(''));commit();stage();thumbs()}});
+bind('bExp','onclick',()=>ask('내용을 모두 복사해 보관하세요 (가져오기에서 붙여넣어 복원)',JSON.stringify({theme:S.theme,num:S.num,slides:S.slides})));
+bind('bImp','onclick',async()=>{const v=await ask('내보낸 내용을 붙여넣으세요 (현재 내용은 바뀝니다)','');if(!v)return;try{const o=JSON.parse(v);if(!o.slides||!o.slides.length)throw 0;S.slides=o.slides;S.theme=o.theme||'라이트';S.num=!!o.num;S.cur=0;S.sel=[];commit();render()}catch(e){ask('올바른 형식이 아니에요','')}});
+bind('bUndo','onclick',()=>undo(-1));bind('bRedo','onclick',()=>undo(1));
+/* 서식 */
+bind('pFont','onchange',e=>apply(x=>x.font=e.target.value));
+bind('pSize','oninput',e=>apply(x=>x.size=Math.max(8,+e.target.value||8)));
+bind('bB','onclick',()=>apply(x=>x.bold=!x.bold));bind('bI','onclick',()=>apply(x=>x.it=!x.it));bind('bU','onclick',()=>apply(x=>x.ul=!x.ul));
+bind('aL','onclick',()=>apply(x=>x.al='left'));bind('aC','onclick',()=>apply(x=>x.al='center'));bind('aR','onclick',()=>apply(x=>x.al='right'));
+bind('pColor','oninput',e=>apply(x=>x.color=e.target.value));bind('pFill','oninput',e=>apply(x=>x.fill=e.target.value));
+bind('pStroke','oninput',e=>apply(x=>{x.stroke=e.target.value;x.sw=x.sw||2}));bind('pSw','oninput',e=>apply(x=>{x.sw=+e.target.value||0;if(!x.stroke)x.stroke='#000000'}));
+bind('pOp','oninput',e=>apply(x=>x.op=e.target.value/100));bind('pRot','oninput',e=>apply(x=>x.rot=+e.target.value||0));bind('pSh','onchange',e=>apply(x=>x.sh=e.target.checked));
+bind('pAl','onchange',e=>{const k=e.target.value,l=sels();e.target.value='';if(!k||!l.length)return;
+ const bx=l.length>1?{x:Math.min(...l.map(a=>a.x)),y:Math.min(...l.map(a=>a.y)),r:Math.max(...l.map(a=>a.x+a.w)),b:Math.max(...l.map(a=>a.y+a.h))}:{x:0,y:0,r:W,b:H};
+ l.forEach(a=>{if(k==='l')a.x=bx.x;if(k==='c')a.x=Math.round((bx.x+bx.r-a.w)/2);if(k==='r')a.x=bx.r-a.w;if(k==='t')a.y=bx.y;if(k==='m')a.y=Math.round((bx.y+bx.b-a.h)/2);if(k==='b')a.y=bx.b-a.h});commit();stage();thumbs()});
+function del(){if(!S.sel.length)return;cur().els=cur().els.filter(x=>!S.sel.includes(x.id));S.sel=[];commit();render()}
+function copy(){const l=sels();if(l.length)clip=JSON.stringify(l)}
+function paste(){if(!clip)return;const l=JSON.parse(clip);l.forEach(x=>{x.id=uid();x.x+=20;x.y+=20});cur().els.push(...l);clip=JSON.stringify(l);S.sel=l.map(x=>x.id);commit();render()}
+bind('bDel','onclick',del);bind('bDup','onclick',()=>{copy();paste()});
+bind('bFront','onclick',()=>{const l=sels();cur().els=[...cur().els.filter(x=>!l.includes(x)),...l];commit();render()});
+bind('bBack','onclick',()=>{const l=sels();cur().els=[...l,...cur().els.filter(x=>!l.includes(x))];commit();render()});
+/* 슬라이드 */
+bind('sAdd','onclick',()=>{S.slides.splice(S.cur+1,0,mkSlide($('lay').value));S.cur++;S.sel=[];commit();render()});
+bind('sDup','onclick',()=>{const c=JSON.parse(JSON.stringify(cur()));c.els.forEach(e=>e.id=uid());S.slides.splice(S.cur+1,0,c);S.cur++;S.sel=[];commit();render()});
+bind('sDel','onclick',()=>{if(S.slides.length<2)S.slides[0]=mkSlide('blank');else{S.slides.splice(S.cur,1);S.cur=Math.max(0,S.cur-1)}S.sel=[];commit();render()});
+bind('pBg','oninput',e=>{cur().bg=e.target.value;commit();stage();thumbs()});bind('pBg2','oninput',e=>{cur().bg2=e.target.value;commit();stage();thumbs()});
+bind('bBg1','onclick',()=>{delete cur().bg2;commit();stage();thumbs()});
+bind('pNum','onchange',e=>{S.num=e.target.checked;commit();render()});
+bind('pTr','onchange',e=>{cur().tr=e.target.value;commit()});
+bind('notes','oninput',e=>{cur().notes=e.target.value});bind('notes','onchange',()=>commit());
+$('pTheme').innerHTML=Object.keys(TM).map(k=>'<option>'+k+'</option>').join('');
+bind('pTheme','onchange',e=>{const o=TH(),n=TM[e.target.value],m={[o.bg]:n.bg,[o.t]:n.t,[o.b]:n.b,[o.a]:n.a};S.theme=e.target.value;
+ S.slides.forEach(sl=>{sl.bg=m[sl.bg]||sl.bg;if(sl.bg2)sl.bg2=m[sl.bg2]||sl.bg2;sl.els.forEach(el=>{['color','fill','stroke'].forEach(k=>{if(m[el[k]])el[k]=m[el[k]]});if(el.font===o.f)el.font=n.f})});commit();render()});
+/* 발표 */
+let pi=0,pl=false,scr='',nb='';
+function show(){const p=$('pres');p.innerHTML='';p.style.background=scr==='w'?'#fff':'#000';const sl=S.slides[pi],sc=Math.min(innerWidth/W,innerHeight/H);
+ const w=document.createElement('div');w.className='stw tr-'+(sl.tr||'none');
+ w.style.cssText='position:absolute;left:'+(innerWidth-W*sc)/2+'px;top:'+(innerHeight-H*sc)/2+'px;width:'+W*sc+'px;height:'+H*sc+'px;visibility:'+(scr?'hidden':'visible');
+ paint(w,sl,sc,false);p.appendChild(w);$('pcount').textContent=(pi+1)+' / '+S.slides.length}
+function play(f){pl=true;scr='';pi=f===undefined?S.cur:f;$('pres').classList.add('on');$('pcount').hidden=false;show();try{document.documentElement.requestFullscreen()}catch(e){}}
+function stop(){pl=false;$('pres').classList.remove('on');$('pcount').hidden=true;try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}S.cur=pi;S.sel=[];render()}
+function go(d){const n=pi+d;if(n<0)return;if(n>=S.slides.length){stop();return}pi=n;show()}
+bind('bPlay','onclick',play);
+$('pres').onclick=e=>go(e.clientX<innerWidth/3?-1:1);
+document.addEventListener('pointerdown',e=>{lf=!!(e.target.closest&&e.target.closest('#list'));const a=document.activeElement;if(a&&a.isContentEditable&&!a.contains(e.target))a.blur()},true);
+document.addEventListener('change',e=>{if(e.target.tagName==='SELECT')e.target.blur()});
+addEventListener('keydown',e=>{
+ if(pl){const nx=['ArrowRight','ArrowDown',' ','PageDown','n','N'],pv=['ArrowLeft','ArrowUp','PageUp','Backspace','p','P'];
+  if(/^\d$/.test(e.key)){nb+=e.key;return}
+  if(e.key==='Enter'){e.preventDefault();if(nb){pi=Math.max(0,Math.min(S.slides.length-1,+nb-1));nb='';show()}else go(1);return}
+  if(nx.includes(e.key)){e.preventDefault();go(1)}else if(pv.includes(e.key)){e.preventDefault();go(-1)}
+  else if(e.key==='Home'){pi=0;show()}else if(e.key==='End'){pi=S.slides.length-1;show()}
+  else if(e.key==='b'||e.key==='B'){scr=scr==='b'?'':'b';show()}else if(e.key==='w'||e.key==='W'){scr=scr==='w'?'':'w';show()}
+  else if(e.key==='Escape')stop();return}
+ const t=e.target;if(t.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(t.tagName))return;
+ const m=e.ctrlKey||e.metaKey,k=e.key.toLowerCase();
+const m2=e.ctrlKey||e.metaKey,k2=e.key.toLowerCase();
+ if(e.key==='F5'){e.preventDefault();play(e.shiftKey?undefined:0);return}
+ if(m2&&k2==='s'){e.preventDefault();flash();return}
+ if(m2&&k2==='m'){e.preventDefault();$('sAdd').click();return}
+ if(m2&&k2==='x'){e.preventDefault();copy();del();return}
+ if(m2&&k2.length===1&&'biu'.includes(k2)){e.preventDefault();$({b:'bB',i:'bI',u:'bU'}[k2]).click();return}
+ if(m2&&k2.length===1&&'elr'.includes(k2)){e.preventDefault();$({e:'aC',l:'aL',r:'aR'}[k2]).click();return}
+ if(m2&&['[',']','<','>'].includes(e.key)){e.preventDefault();const u=(e.key===']'||e.key==='>')?2:-2;apply(x=>{if(x.size)x.size=Math.max(8,x.size+u)});props();return}
+ const go2=n=>{S.cur=Math.max(0,Math.min(S.slides.length-1,n));S.sel=[];render()};
+ if(lf){if(e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();go2(S.cur-1);return}
+  if(e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();go2(S.cur+1);return}
+  if(e.key==='Enter'){e.preventDefault();$('sAdd').click();return}
+  if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();$('sDel').click();return}
+  if(m2&&k2==='d'){e.preventDefault();$('sDup').click();return}}
+ if(e.key==='PageUp'){go2(S.cur-1);return}if(e.key==='PageDown'){go2(S.cur+1);return}
+ if(e.key==='Home'&&!S.sel.length){go2(0);return}if(e.key==='End'&&!S.sel.length){go2(S.slides.length-1);return}
+ if(e.key==='Tab'){e.preventDefault();const a=cur().els;if(a.length){let i=a.findIndex(x=>x.id===S.sel[0]);i=(i+(e.shiftKey?-1:1)+a.length)%a.length;S.sel=[a[i].id];stage();props()}return}
+ if((e.key==='Enter'||e.key==='F2')&&S.sel.length===1){e.preventDefault();const nd=$('stagebox').querySelector('[data-id="'+S.sel[0]+'"]');if(nd&&nd.ondblclick)nd.ondblclick({target:nd.querySelector('td')||nd});return}
+ if(m&&k==='z'){e.preventDefault();undo(e.shiftKey?1:-1)}else if(m&&k==='y'){e.preventDefault();undo(1)}
+ else if(m&&k==='c')copy();else if(m&&k==='v')paste();else if(m&&k==='d'){e.preventDefault();copy();paste()}
+ else if(m&&k==='a'){e.preventDefault();S.sel=cur().els.map(x=>x.id);stage();props()}
+ else if((e.key==='Delete'||e.key==='Backspace')&&S.sel.length){e.preventDefault();del()}
+ else if(e.key==='Escape'){S.sel=[];stage();props()}
+ else if(e.key.startsWith('Arrow')&&S.sel.length){e.preventDefault();const d=e.shiftKey?10:1;
+  sels().forEach(el=>{if(e.key==='ArrowLeft')el.x-=d;if(e.key==='ArrowRight')el.x+=d;if(e.key==='ArrowUp')el.y-=d;if(e.key==='ArrowDown')el.y+=d});commit();stage();thumbs()}});
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&pl)stop()});
+addEventListener('resize',()=>{pl?show():stage()});
+
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));document.querySelectorAll('.rb').forEach(r=>r.hidden=r.id!==t.dataset.p)});
+function flash(){commit();const v=$('sv');v.textContent='저장됨';setTimeout(()=>v.textContent='자동 저장',1500)}
+const setZoom=v=>{zoom=v;stage()};
+bind('bSave','onclick',flash);bind('bQ','onclick',()=>play(0));bind('bPlayAll','onclick',()=>play(0));bind('bPlay','onclick',()=>play());
+bind('bCopy','onclick',copy);bind('bCut','onclick',()=>{copy();del()});bind('bPaste','onclick',paste);
+bind('bFit','onclick',()=>setZoom(0));bind('b100','onclick',()=>setZoom(100));
+bind('bZm','onclick',()=>setZoom(Math.max(20,Math.round(scale*100)-10)));bind('bZp','onclick',()=>setZoom(Math.min(300,Math.round(scale*100)+10)));
+bind('zr','oninput',e=>setZoom(+e.target.value));
+$('stwrap').addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();setZoom(Math.max(20,Math.min(300,Math.round(scale*100)+(e.deltaY<0?10:-10))))}},{passive:false});
+bind('vNotes','onchange',e=>{$('notes').style.display=e.target.checked?'':'none';stage()});
+bind('bTrAll','onclick',()=>{S.slides.forEach(x=>x.tr=cur().tr||'none');commit()});
+bind('bNew','onclick',async()=>{const v=await ask('새 프레젠테이션을 만들면 현재 내용이 모두 지워져요. 계속할까요?','');if(v===null)return;S.slides=[mkSlide('title')];S.cur=0;S.sel=[];commit();render()});
+const KEYS=['[편집]','Ctrl+M 새 슬라이드','Ctrl+D 개체/슬라이드 복제','Ctrl+X / C / V 잘라내기 / 복사 / 붙여넣기','Ctrl+Z / Y 실행 취소 / 다시 실행','Ctrl+B / I / U 굵게 / 기울임 / 밑줄','Ctrl+E / L / R 가운데 / 왼쪽 / 오른쪽 맞춤','Ctrl+] / [ 글자 크기 키우기 / 줄이기','Ctrl+A 모두 선택, Shift+클릭 다중 선택','Tab / Shift+Tab 개체 선택 이동','Enter 또는 F2 텍스트 편집, Esc 선택 해제','방향키 이동 (Shift는 크게), Delete 삭제','PageUp / PageDown 이전 / 다음 슬라이드','Ctrl+S 저장, Ctrl+휠 확대 / 축소','','[슬라이드 목록]','↑ ↓ 이동, Enter 새 슬라이드, Delete 삭제, Ctrl+D 복제','','[슬라이드 쇼]','F5 처음부터, Shift+F5 현재 슬라이드부터','→ ↓ Space Enter N 다음 / ← ↑ Backspace P 이전','Home / End 처음 / 끝, 숫자+Enter 해당 슬라이드로 이동','B 검은 화면, W 흰 화면, Esc 종료'].join('\n');
+bind('bKeys','onclick',()=>ask('단축키',KEYS));
+
+/* ===== 차트 모델 / 렌더 / 편집 ===== */
+const CP=el=>[el.fill||'#3b4cca','#e0603f','#f2b134','#2fa38a','#8a5bd6','#d6457a'];
+function normChart(el){if(el.data&&!el.series){el.cats=el.data.map(x=>x.l);el.series=[{name:'값',vals:el.data.map(x=>x.v)}];delete el.data}
+ if(el.title===undefined)el.title='';if(el.val===undefined)el.val=true;if(el.leg===undefined)el.leg=el.ch==='pie'||el.series.length>1;
+ el.series.forEach((x,i)=>{x.color=x.color||CP(el)[i%6]})}
+function chartSvg(el){normChart(el);const C=CP(el),c=el.color||'#333',cats=el.cats,ser=el.series,top=el.title?34:12;
+ let s='<svg viewBox="0 0 400 300" style="width:100%;height:100%" font-size="13" fill="'+c+'" text-anchor="middle">';
+ if(el.title)s+='<text x="200" y="22" font-size="17" font-weight="700">'+esc(el.title)+'</text>';
+ if(el.ch==='pie'){const v=ser[0].vals,tot=v.reduce((a,x)=>a+x,0)||1,cy=top+(290-top)/2,r=Math.min(110,(290-top)/2-6),cx=el.leg?140:200;let a0=-Math.PI/2;
+  v.forEach((x,i)=>{const a1=a0+Math.min(x/tot,.9999)*2*Math.PI,lg=a1-a0>Math.PI?1:0;
+   s+='<path d="M'+cx+' '+cy+'L'+(cx+r*Math.cos(a0))+' '+(cy+r*Math.sin(a0))+'A'+r+' '+r+' 0 '+lg+' 1 '+(cx+r*Math.cos(a1))+' '+(cy+r*Math.sin(a1))+'Z" fill="'+C[i%6]+'"/>';
+   if(el.val){const am=(a0+a1)/2;s+='<text x="'+(cx+r*.62*Math.cos(am))+'" y="'+(cy+r*.62*Math.sin(am)+4)+'" fill="#fff" font-weight="700">'+Math.round(x/tot*100)+'%</text>'}
+   if(el.leg)s+='<rect x="285" y="'+(top+i*22)+'" width="12" height="12" fill="'+C[i%6]+'"/><text x="303" y="'+(top+11+i*22)+'" text-anchor="start">'+esc(cats[i]||'')+'</text>';a0=a1})}
+ else{const mx=Math.max(...ser.flatMap(x=>x.vals),1),n=cats.length||1,bot=el.leg?250:262,t2=top+(el.val?14:4),pw=350/n,h=bot-t2,y=v=>bot-v/mx*h,k=ser.length;
+  for(let g=0;g<=4;g++){const gy=bot-h*g/4;s+='<line x1="36" y1="'+gy+'" x2="390" y2="'+gy+'" stroke="'+c+'" opacity=".15"/><text x="32" y="'+(gy+4)+'" text-anchor="end" font-size="10" opacity=".7">'+Math.round(mx*g/4*10)/10+'</text>'}
+  ser.forEach((se,j)=>{
+   if(el.ch==='bar'){const bw=pw*.8/k;se.vals.forEach((v,i)=>{const x=40+pw*i+pw*.1+bw*j;s+='<rect x="'+x+'" y="'+y(v)+'" width="'+bw+'" height="'+(bot-y(v))+'" fill="'+se.color+'"/>';if(el.val)s+='<text x="'+(x+bw/2)+'" y="'+(y(v)-4)+'" font-size="10">'+v+'</text>'})}
+   else{const pts=se.vals.map((v,i)=>[40+pw*i+pw/2,y(v)]);s+='<polyline fill="none" stroke="'+se.color+'" stroke-width="3" points="'+pts.join(' ')+'"/>';pts.forEach((q,i)=>{s+='<circle cx="'+q[0]+'" cy="'+q[1]+'" r="4" fill="'+se.color+'"/>';if(el.val)s+='<text x="'+q[0]+'" y="'+(q[1]-8)+'" font-size="10">'+se.vals[i]+'</text>'})}});
+  cats.forEach((l,i)=>{s+='<text x="'+(40+pw*i+pw/2)+'" y="'+(bot+16)+'" font-size="11">'+esc(l)+'</text>'});
+  if(el.leg)ser.forEach((se,j)=>{const lx=50+j*110;s+='<rect x="'+lx+'" y="280" width="10" height="10" fill="'+se.color+'"/><text x="'+(lx+14)+'" y="289" text-anchor="start" font-size="11">'+esc(se.name)+'</text>'})}
+ return s+'</svg>'}
+function chartDlg(el){normChart(el);const w=JSON.parse(JSON.stringify({cats:el.cats,series:el.series}));
+ $('cType').value=el.ch;$('cTitle').value=el.title;$('cVal').checked=el.val;$('cLeg').checked=el.leg;
+ const g=()=>{const t=document.createElement('table');t.className='cg';let h='<tr><th></th>';
+  w.series.forEach((x,j)=>{h+='<th><input data-n="'+j+'" value="'+esc(x.name)+'"><input type="color" data-k="'+j+'" value="'+x.color+'"></th>'});t.innerHTML=h+'</tr>';
+  w.cats.forEach((c,i)=>{const r=t.insertRow();r.innerHTML='<td><input data-c="'+i+'" value="'+esc(c)+'"></td>'+w.series.map((x,j)=>'<td><input type="number" data-v="'+i+','+j+'" value="'+(x.vals[i]||0)+'"></td>').join('')});
+  t.oninput=e=>{const d=e.target.dataset,v=e.target.value;if(d.n!==undefined)w.series[d.n].name=v;else if(d.k!==undefined)w.series[d.k].color=v;else if(d.c!==undefined)w.cats[d.c]=v;else if(d.v){const q=d.v.split(',');w.series[q[1]].vals[q[0]]=parseFloat(v)||0}};
+  $('cGrid').replaceChildren(t)};g();
+ $('cAddR').onclick=()=>{w.cats.push('항목 '+(w.cats.length+1));w.series.forEach(x=>x.vals.push(0));g()};
+ $('cDelR').onclick=()=>{if(w.cats.length>1){w.cats.pop();w.series.forEach(x=>x.vals.pop());g()}};
+ $('cAddC').onclick=()=>{w.series.push({name:'계열 '+(w.series.length+1),color:CP(el)[w.series.length%6],vals:w.cats.map(()=>0)});g()};
+ $('cDelC').onclick=()=>{if(w.series.length>1){w.series.pop();g()}};
+ const d=$('cdlg');d.showModal();
+ $('cOk').onclick=()=>{d.close();el.ch=$('cType').value;el.title=$('cTitle').value;el.val=$('cVal').checked;el.leg=$('cLeg').checked;el.cats=w.cats;el.series=w.series;commit();stage();thumbs()};
+ $('cNo').onclick=()=>d.close()}
+bind('bData','onclick',()=>{const e=sels()[0];if(e&&e.type==='ch')chartDlg(e)});
+/* ===== 표 ===== */
+function TABNAV(el,t){return ev=>{if(el.type!=='tb'||ev.key!=='Tab')return;ev.preventDefault();
+ let r=+t.dataset.r,c=+t.dataset.c+(ev.shiftKey?-1:1);const cols=el.data[0].length;
+ if(c>=cols){c=0;r++}if(c<0){c=cols-1;r--}if(r>=el.data.length){el.data.push(el.data[0].map(()=>''));el.h+=40}if(r<0)r=0;
+ t.blur();const nn=$('stagebox').querySelector('[data-id="'+el.id+'"]'),td=nn&&nn.querySelector('td[data-r="'+r+'"][data-c="'+c+'"]');if(td)nn.ondblclick({target:td})}}
+bind('bTbl','onclick',async()=>{const v=await ask('표 크기 (행,열)','3,3');if(v===null)return;const a=v.split(/[,x×]/),cl=x=>Math.max(1,Math.min(12,parseInt(x)||3)),r=cl(a[0]),c=cl(a[1]),t=TH();
+ add({type:'tb',x:120,y:140,w:Math.min(820,c*200),h:r*50,data:Array.from({length:r},(_,i)=>Array.from({length:c},(_,j)=>i?'':'제목 '+(j+1))),size:22,color:t.t,fill:t.a,font:t.f,al:'left'})});
+bind('bRowD','onclick',()=>{const e=sels()[0];if(e&&e.type==='tb'&&e.data.length>1){e.data.pop();e.h=Math.max(30,e.h-40);commit();stage();thumbs()}});
+bind('bColD','onclick',()=>{const e=sels()[0];if(e&&e.type==='tb'&&e.data[0].length>1){e.data.forEach(r=>r.pop());commit();stage();thumbs()}});
+/* ===== 저장 도우미 ===== */
+let nt;function note(m,ms=3000){const v=$('sv');v.textContent=m;clearTimeout(nt);if(ms)nt=setTimeout(()=>v.textContent='자동 저장',ms)}
+async function saveFile(name,data){let dl=null;try{dl=window.claude?await claude.use('downloads'):null}catch(e){}
+ if(!dl)throw new Error('이 화면에서는 저장을 쓸 수 없어요. claude.ai에서 열어 주세요');
+ try{await dl.save({filename:name,data});note('저장했어요')}catch(e){if(e&&e.code==='declined')note('저장을 취소했어요');else throw new Error((e&&e.code)||'저장 오류')}}
+/* ===== PPTX 내보내기 ===== */
+async function mkPptx(){const P=new PptxGenJS();P.layout='LAYOUT_16x9';const px=v=>v/96,hex=c=>(c&&c[0]==='#'?c:'#000000').slice(1,7).toUpperCase();
+ const ST={rect:'rect',round:'roundRect',ellipse:'ellipse',tri:'triangle',dia:'diamond',star:'star5',arrow:'rightArrow',line:'line'};
+ S.slides.forEach((sl,si)=>{const s=P.addSlide();s.background={color:hex(sl.bg)};
+  sl.els.forEach(el=>{const g={x:px(el.x),y:px(el.y),w:px(el.w),h:px(el.h),rotate:el.rot||0};
+   const f={fontFace:el.font||'Noto Sans KR',fontSize:Math.round((el.size||24)*.75),color:hex(el.color),bold:!!el.bold,italic:!!el.it,underline:el.ul?{style:'sng'}:undefined,align:el.al||'left',valign:el.va==='middle'?'middle':'top'};
+   if(el.type==='i')s.addImage({data:el.src,...g});
+   else if(el.type==='tb'){const n=el.data[0].length;s.addTable(el.data.map((r,i)=>r.map(c=>({text:c||' ',options:i?{}:{fill:{color:hex(el.fill)},color:'FFFFFF',bold:true}}))),{x:g.x,y:g.y,w:g.w,colW:el.data[0].map(()=>g.w/n),rowH:g.h/el.data.length,fontFace:f.fontFace,fontSize:f.fontSize,color:f.color,border:{type:'solid',pt:1,color:'999999'},valign:'middle'})}
+   else if(el.type==='ch'){normChart(el);const pie=el.ch==='pie',ser=pie?[el.series[0]]:el.series,T={bar:P.charts.BAR,line:P.charts.LINE,pie:P.charts.PIE}[el.ch],tc=hex(el.color);
+    s.addChart(T,ser.map(x=>({name:x.name,labels:el.cats,values:x.vals})),{x:g.x,y:g.y,w:g.w,h:g.h,chartColors:pie?el.cats.map((_,i)=>hex(CP(el)[i%6])):ser.map(x=>hex(x.color)),showTitle:!!el.title,title:el.title,titleColor:tc,showLegend:!!el.leg,legendPos:'b',legendColor:tc,showValue:!!el.val,dataLabelColor:pie?'FFFFFF':tc,catAxisLabelColor:tc,valAxisLabelColor:tc})}
+   else if(el.shape==='line')s.addShape('line',{x:g.x,y:g.y+g.h/2,w:g.w,h:0,line:{color:hex(el.fill),width:(el.sw||3)*.75},rotate:g.rotate});
+   else{const o={...g,...f,margin:5};if(el.shape!=='none'){o.shape=ST[el.shape];o.fill={color:hex(el.fill),transparency:Math.round((1-(el.op??1))*100)};if(el.stroke&&el.sw)o.line={color:hex(el.stroke),width:el.sw*.75}}s.addText(el.text||' ',o)}});
+  if(S.num)s.addText(String(si+1),{x:9,y:5.2,w:.8,h:.3,align:'right',fontSize:12,color:hex(TH().b)});
+  if(sl.notes)s.addNotes(sl.notes)});
+ return P.write({outputType:'blob'})}
+/* ===== PDF 내보내기 ===== */
+async function mkPdf(){await document.fonts.ready;const jp=window.jspdf.jsPDF,d=new jp({orientation:'l',unit:'px',format:[W,H],hotfixes:['px_scaling']});
+ const box=document.createElement('div');box.style.cssText='position:fixed;left:0;top:0;width:960px;height:540px;z-index:-1';document.body.appendChild(box);
+ try{for(let i=0;i<S.slides.length;i++){box.innerHTML='';paint(box,S.slides[i],1,false);note('PDF 만드는 중 '+(i+1)+'/'+S.slides.length,0);
+  const c=await html2canvas(box,{scale:1.5,logging:false,useCORS:true,width:W,height:H});if(i)d.addPage([W,H],'l');d.addImage(c.toDataURL('image/jpeg',.92),'JPEG',0,0,W,H)}}finally{box.remove()}
+ return d.output('blob')}
+async function exp(kind){try{
+ if(kind==='pptx'){if(!window.PptxGenJS)throw new Error('라이브러리를 아직 불러오지 못했어요');note('PPTX 만드는 중…',0);await saveFile('프레젠테이션.pptx',await mkPptx())}
+ else if(kind==='pdf'){if(!window.jspdf||!window.html2canvas)throw new Error('라이브러리를 아직 불러오지 못했어요');await saveFile('프레젠테이션.pdf',await mkPdf())}
+ else await saveFile('프레젠테이션.json',JSON.stringify({theme:S.theme,num:S.num,slides:S.slides}))}
+ catch(e){note('실패: '+(e.message||e),6000)}}
+bind('bPptx','onclick',()=>exp('pptx'));bind('bPdf','onclick',()=>exp('pdf'));bind('bExp','onclick',()=>exp('json'));
+/* ===== PPTX 불러오기 ===== */
+async function importPptx(file){
+ const z=await JSZip.loadAsync(file),dp=new DOMParser();
+ const rd=async p=>{const f=z.file(p);return f?dp.parseFromString(await f.async('string'),'application/xml'):null};
+ const rp=(b,t)=>{if(t[0]==='/')return t.slice(1);const a=b.split('/').slice(0,-1);t.split('/').forEach(x=>{if(x==='..')a.pop();else if(x&&x!=='.')a.push(x)});return a.join('/')};
+ const rl=async p=>{const d=await rd(p.replace(/([^/]+)$/,'_rels/$1.rels')),m={};if(d)[...d.getElementsByTagName('Relationship')].forEach(r=>m[r.getAttribute('Id')]={t:rp(p,r.getAttribute('Target')),y:r.getAttribute('Type')});return m};
+ const pr=await rd('ppt/presentation.xml');if(!pr)throw new Error('올바른 pptx 파일이 아니에요');
+ const k=W/(+pr.getElementsByTagName('p:sldSz')[0].getAttribute('cx')),pre=await rl('ppt/presentation.xml'),th=await rd('ppt/theme/theme1.xml'),TC={};
+ if(th)['dk1','lt1','dk2','lt2','accent1','accent2','accent3','accent4','accent5','accent6'].forEach(n=>{const e=th.getElementsByTagName('a:'+n)[0],c=e&&(e.getElementsByTagName('a:srgbClr')[0]||e.getElementsByTagName('a:sysClr')[0]);if(c)TC[n]='#'+(c.getAttribute('lastClr')||c.getAttribute('val'))});
+ Object.assign(TC,{tx1:TC.dk1,bg1:TC.lt1,tx2:TC.dk2,bg2:TC.lt2});
+ const clr=n=>{if(!n)return null;let c=n.getElementsByTagName('a:srgbClr')[0];if(c)return'#'+c.getAttribute('val');c=n.getElementsByTagName('a:schemeClr')[0];if(c)return TC[c.getAttribute('val')]||null;c=n.getElementsByTagName('a:sysClr')[0];return c?'#'+(c.getAttribute('lastClr')||'000000'):null};
+ const ch=(n,t)=>n&&[...n.children].find(x=>x.tagName===t),T=n=>[...n.getElementsByTagName('a:t')].map(t=>t.textContent).join('');
+ const fm=f=>/serif|명조|batang|myeongjo|times|georgia/i.test(f||'')&&!/sans/i.test(f||'')?'Noto Serif KR':'Noto Sans KR';
+ const SM={rect:'rect',roundRect:'round',ellipse:'ellipse',triangle:'tri',diamond:'dia',star5:'star',rightArrow:'arrow'};
+ const MM={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',svg:'image/svg+xml'};
+ const bgOf=d=>{const b=d&&d.getElementsByTagName('p:bg')[0];return b?clr(b):null};
+ const txt=n=>{const tb=n.getElementsByTagName('p:txBody')[0];if(!tb)return null;
+  const lines=[...tb.getElementsByTagName('a:p')].map(p=>(p.getElementsByTagName('a:buChar')[0]?'• ':'')+T(p));
+  const r=tb.getElementsByTagName('a:rPr')[0]||tb.getElementsByTagName('a:endParaRPr')[0],pp=tb.getElementsByTagName('a:pPr')[0],bp=tb.getElementsByTagName('a:bodyPr')[0],lat=r&&r.getElementsByTagName('a:latin')[0],sz=r&&r.getAttribute('sz');
+  return {text:lines.join('\n'),size:sz?+sz/75:null,bold:!!(r&&r.getAttribute('b')==='1'),it:!!(r&&r.getAttribute('i')==='1'),ul:!!(r&&r.getAttribute('u')&&r.getAttribute('u')!=='none'),color:clr(r&&ch(r,'a:solidFill')),al:{ctr:'center',r:'right'}[pp&&pp.getAttribute('algn')]||'left',va:bp&&bp.getAttribute('anchor')==='ctr'?'middle':'top',font:lat&&lat.getAttribute('typeface')}};
+ const box=(n,lay)=>{let x=n.getElementsByTagName('a:xfrm')[0]||n.getElementsByTagName('p:xfrm')[0];
+  if(!x&&lay){const ph=n.getElementsByTagName('p:ph')[0];if(ph){const id=ph.getAttribute('idx'),ty=ph.getAttribute('type'),m=[...lay.getElementsByTagName('p:sp')].find(s=>{const q=s.getElementsByTagName('p:ph')[0];return q&&(id?q.getAttribute('idx')===id:q.getAttribute('type')===ty)&&s.getElementsByTagName('a:xfrm')[0]});if(m)x=m.getElementsByTagName('a:xfrm')[0]}}
+  if(!x)return null;const o=x.getElementsByTagName('a:off')[0],e=x.getElementsByTagName('a:ext')[0];if(!o||!e)return null;
+  const b={x:+o.getAttribute('x'),y:+o.getAttribute('y'),w:+e.getAttribute('cx'),h:+e.getAttribute('cy'),rot:(+x.getAttribute('rot')||0)/60000};
+  for(let a=n.parentNode;a&&a.tagName==='p:grpSp';a=a.parentNode){const g=ch(ch(a,'p:grpSpPr'),'a:xfrm');if(!g)continue;const go=ch(g,'a:off'),ge=ch(g,'a:ext'),co=ch(g,'a:chOff'),ce=ch(g,'a:chExt');
+   if(go&&ge&&co&&ce){const sx=ge.getAttribute('cx')/(ce.getAttribute('cx')||1),sy=ge.getAttribute('cy')/(ce.getAttribute('cy')||1);b.x=+go.getAttribute('x')+(b.x-co.getAttribute('x'))*sx;b.y=+go.getAttribute('y')+(b.y-co.getAttribute('y'))*sy;b.w*=sx;b.h*=sy}}
+  return {x:Math.round(b.x*k),y:Math.round(b.y*k),w:Math.max(10,Math.round(b.w*k)),h:Math.max(4,Math.round(b.h*k)),rot:Math.round(b.rot)}};
+ const slides=[];
+ for(const id of [...pr.getElementsByTagName('p:sldId')].map(x=>x.getAttribute('r:id'))){
+  const sp=pre[id].t,doc=await rd(sp),sr=await rl(sp),lr=Object.values(sr).find(r=>/slideLayout$/.test(r.y)),lay=lr&&await rd(lr.t);
+  const mr=lr&&Object.values(await rl(lr.t)).find(r=>/slideMaster$/.test(r.y)),mas=mr&&await rd(mr.t);
+  const sl={bg:bgOf(doc)||bgOf(lay)||bgOf(mas)||'#ffffff',els:[],notes:'',tr:'none'},nr=Object.values(sr).find(r=>/notesSlide$/.test(r.y));
+  if(nr){const nd=await rd(nr.t);if(nd)[...nd.getElementsByTagName('p:sp')].forEach(e=>{const q=e.getElementsByTagName('p:ph')[0];if(q&&q.getAttribute('type')==='body')sl.notes=[...e.getElementsByTagName('a:p')].map(T).join('\n')})}
+  const tree=doc.getElementsByTagName('p:spTree')[0];
+  for(const n of [...tree.getElementsByTagName('*')].filter(n=>['p:sp','p:pic','p:graphicFrame','p:cxnSp'].includes(n.tagName))){
+   const b=box(n,lay);if(!b)continue;const base={id:uid(),x:b.x,y:b.y,w:b.w,h:b.h,rot:b.rot,op:1};
+   try{
+    if(n.tagName==='p:pic'){const bl=n.getElementsByTagName('a:blip')[0],r=bl&&sr[bl.getAttribute('r:embed')];if(!r)continue;const ex=r.t.split('.').pop().toLowerCase();if(!MM[ex])continue;
+     sl.els.push({...base,type:'i',src:'data:'+MM[ex]+';base64,'+await z.file(r.t).async('base64')})}
+    else if(n.tagName==='p:graphicFrame'){const tb=n.getElementsByTagName('a:tbl')[0],cr=n.getElementsByTagName('c:chart')[0];
+     if(tb){const data=[...tb.getElementsByTagName('a:tr')].map(tr=>[...tr.children].filter(c=>c.tagName==='a:tc').map(tc=>[...tc.getElementsByTagName('a:p')].map(T).join('\n'))),pc=tb.getElementsByTagName('a:tcPr')[0],r0=tb.getElementsByTagName('a:rPr')[0];
+      sl.els.push({...base,type:'tb',data,fill:clr(ch(pc,'a:solidFill'))||TC.accent1||'#3b4cca',color:'#1d2330',size:r0&&r0.getAttribute('sz')?Math.round(r0.getAttribute('sz')/75):18,font:'Noto Sans KR',al:'left'})}
+     else if(cr){const cd=await rd(sr[cr.getAttribute('r:id')].t),ty=['barChart','bar3DChart','lineChart','line3DChart','pieChart','pie3DChart','doughnutChart','areaChart'].find(t=>cd.getElementsByTagName('c:'+t)[0]),ser=[...cd.getElementsByTagName('c:ser')];
+      const pts=e=>e?[...e.getElementsByTagName('c:pt')].sort((a,c)=>a.getAttribute('idx')-c.getAttribute('idx')).map(q=>q.getElementsByTagName('c:v')[0].textContent):[];
+      const series=ser.map((e,i)=>{const tx=e.getElementsByTagName('c:tx')[0],tv=tx&&tx.getElementsByTagName('c:v')[0];return {name:tv?tv.textContent:'계열 '+(i+1),vals:pts(e.getElementsByTagName('c:val')[0]).map(v=>parseFloat(v)||0),color:clr(ch(ch(e,'c:spPr'),'a:solidFill'))||undefined}});
+      const c0=pts(ser[0].getElementsByTagName('c:cat')[0]),tt=ch(cd.getElementsByTagName('c:chart')[0],'c:title');
+      sl.els.push({...base,type:'ch',ch:/pie|doughnut/.test(ty)?'pie':/line/.test(ty)?'line':'bar',cats:series[0].vals.map((_,i)=>c0[i]||String(i+1)),series,title:tt?T(tt):'',color:'#333333',fill:TC.accent1||'#3b4cca',val:true})}}
+    else{const s0=ch(n,'p:spPr'),gm=s0&&ch(s0,'a:prstGeom'),pst=gm&&gm.getAttribute('prst'),fc=clr(s0&&ch(s0,'a:solidFill')),ln=s0&&ch(s0,'a:ln'),lc=clr(ln&&ch(ln,'a:solidFill')),lw=ln&&ln.getAttribute('w')?Math.max(1,Math.round(ln.getAttribute('w')/9525)):(lc?1:0);
+     const t=n.tagName==='p:sp'?txt(n):null,text=t&&t.text.trim()?t.text:'',ph=n.getElementsByTagName('p:ph')[0],isT=!!(ph&&/title/i.test(ph.getAttribute('type')||''));
+     if(n.tagName==='p:cxnSp'||/line|Connector/i.test(pst||'')){sl.els.push({...base,type:'s',shape:'line',fill:lc||'#444444',sw:lw||2,text:'',size:24,color:'#000000',al:'left',va:'top',font:'Noto Sans KR'});continue}
+     if(!fc&&!lc&&!text)continue;
+     sl.els.push({...base,type:'s',shape:(fc||lc)?(SM[pst]||'rect'):'none',fill:fc||'none',stroke:lc||'',sw:lw,text,size:Math.round((t&&t.size)||(isT?58:24)),color:(t&&t.color)||(fc?'#ffffff':'#1d2330'),bold:!!(t&&t.bold)||isT,it:!!(t&&t.it),ul:!!(t&&t.ul),al:(t&&t.al)||'left',va:(t&&t.va==='middle')||fc?'middle':'top',font:fm(t&&t.font)})}
+   }catch(e){}
+  }
+  slides.push(sl)}
+ if(!slides.length)throw new Error('슬라이드를 찾지 못했어요');return slides}
+bind('bImp','onclick',()=>$('fOpen').click());
+$('fOpen').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;note('여는 중…',0);
+ try{if(/\.json$/i.test(f.name)){const o=JSON.parse(await f.text());if(!o.slides||!o.slides.length)throw new Error('형식이 맞지 않아요');S.slides=o.slides;S.theme=TM[o.theme]?o.theme:S.theme;S.num=!!o.num}
+  else if(/\.pptx$/i.test(f.name)){if(!window.JSZip)throw new Error('라이브러리를 아직 불러오지 못했어요');S.slides=await importPptx(f)}
+  else throw new Error('.pptx 또는 .json 파일을 선택하세요');
+  S.cur=0;S.sel=[];commit();render();note('열었어요 ('+S.slides.length+'장)')}catch(x){note('열지 못했어요: '+(x.message||x),6000)}};
+render();
+</script>
+</body>
+</html>
