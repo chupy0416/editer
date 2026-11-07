@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>웹 스프레드시트 (Web Spreadsheet)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Inter & Noto Sans KR -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans KR', sans-serif;
+      user-select: none;
+    }
+    .grid-cell {
+      min-width: 40px;
+      height: 28px;
+      outline: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-sizing: border-box;
+    }
+    .grid-cell:focus {
+      outline: 2px solid #2563eb;
+      z-index: 20;
+      background-color: #ffffff !important;
+    }
+    .cell-selected {
+      background-color: #e0e7ff !important;
+    }
+    .header-cell {
+      background-color: #f3f4f6;
+      color: #374151;
+      font-weight: 600;
+      font-size: 12px;
+      text-align: center;
+      vertical-align: middle;
+      border-right: 1px solid #d1d5db;
+      border-bottom: 1px solid #d1d5db;
+      position: relative;
+      box-sizing: border-box;
+    }
+    .header-cell.active-header {
+      background-color: #dbeafe;
+      color: #1d4ed8;
+    }
+    /* 리사이즈 핸들 스타일 */
+    .col-resizer {
+      position: absolute;
+      top: 0;
+      right: -2px;
+      width: 5px;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 30;
+      user-select: none;
+    }
+    .col-resizer:hover, .resizing-col {
+      background-color: #2563eb;
+    }
+    .row-resizer {
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      cursor: row-resize;
+      z-index: 30;
+      user-select: none;
+    }
+    .row-resizer:hover, .resizing-row {
+      background-color: #2563eb;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col overflow-hidden text-sm text-gray-800">
+
+  <!-- 상단 헤더 & 메뉴바 -->
+  <header class="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm">
+    <div class="flex items-center space-x-3">
+      <div class="p-2 bg-emerald-600 text-white rounded-lg shadow">
+        <i class="fa-solid font-bold text-xl fa-file-excel"></i>
+      </div>
+      <div>
+        <input id="doc-title" type="text" value="제목 없는 스프레드시트" class="font-bold text-base text-gray-800 bg-transparent hover:bg-gray-100 focus:bg-white px-2 py-0.5 rounded border border-transparent focus:border-blue-400 outline-none transition">
+        <div class="flex space-x-3 text-xs text-gray-500 mt-0.5 px-2">
+          <span class="hover:underline cursor-pointer" onclick="exportCSV()">파일 내보내기 (CSV)</span>
+          <span>•</span>
+          <label class="hover:underline cursor-pointer">
+            파일 가져오기 (CSV)
+            <input type="file" id="csv-file-input" accept=".csv" class="hidden" onchange="importCSV(event)">
+          </label>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 저장 및 안내 메시지 -->
+    <div class="flex items-center space-x-2">
+      <div id="status-msg" class="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-200"><i class="fa-solid fa-check text-emerald-500 mr-1"></i> 준비됨</div>
+    </div>
+  </header>
+
+  <!-- 툴바 (포맷팅 및 조작 컨트롤) -->
+  <div class="bg-gray-50 border-b border-gray-200 px-3 py-1.5 flex flex-wrap items-center gap-1.5 shadow-inner text-xs">
+    
+    <!-- 실행 취소/다시 실행 및 삭제 -->
+    <div class="flex items-center space-x-1 border-r border-gray-300 pr-2">
+      <button onclick="clearSelectedCells()" title="선택 셀 내용 지우기" class="p-1.5 text-gray-600 hover:bg-gray-200 rounded">
+        <i class="fa-solid fa-eraser"></i>
+      </button>
+    </div>
+
+    <!-- 텍스트 스타일링 -->
+    <div class="flex items-center space-x-0.5 border-r border-gray-300 pr-2">
+      <button id="btn-bold" onclick="toggleFormat('bold')" title="굵게" class="p-1.5 text-gray-700 hover:bg-gray-200 rounded font-bold">
+        <i class="fa-solid fa-bold"></i>
+      </button>
+      <button id="btn-italic" onclick="toggleFormat('italic')" title="기울임꼴" class="p-1.5 text-gray-700 hover:bg-gray-200 rounded italic">
+        <i class="fa-solid fa-italic"></i>
+      </button>
+      <button id="btn-underline" onclick="toggleFormat('underline')" title="밑줄" class="p-1.5 text-gray-700 hover:bg-gray-200 rounded underline">
+        <i class="fa-solid fa-underline"></i>
+      </button>
+    </div>
+
+    <!-- 색상 설정 -->
+    <div class="flex items-center space-x-2 border-r border-gray-300 pr-2">
+      <label title="글꼴 색상" class="flex items-center cursor-pointer p-1 hover:bg-gray-200 rounded">
+        <i class="fa-solid fa-font text-gray-700 mr-1"></i>
+        <input type="color" id="text-color-picker" onchange="applyColor('color', this.value)" class="w-4 h-4 cursor-pointer border-0 bg-transparent" value="#000000">
+      </label>
+      <label title="채우기 색상" class="flex items-center cursor-pointer p-1 hover:bg-gray-200 rounded">
+        <i class="fa-solid fa-fill-drip text-gray-600 mr-1"></i>
+        <input type="color" id="bg-color-picker" onchange="applyColor('backgroundColor', this.value)" class="w-4 h-4 cursor-pointer border-0 bg-transparent" value="#ffffff">
+      </label>
+    </div>
+
+    <!-- 정렬 -->
+    <div class="flex items-center space-x-0.5 border-r border-gray-300 pr-2">
+      <button onclick="applyAlignment('left')" title="왼쪽 정렬" class="p-1.5 text-gray-700 hover:bg-gray-200 rounded">
+        <i class="fa-solid fa-align-left"></i>
+      </button>
+      <button onclick="applyAlignment('center')" title="가운데 정렬" class="p-1.5 text-gray-700 hover:bg-gray-200 rounded">
+        <i class="fa-solid fa-align-center"></i>
+      </button>
+      <button onclick="applyAlignment('right')" title="오른쪽 정렬" class="p-1.5 text-gray-700 hover:bg-gray-200 rounded">
+        <i class="fa-solid fa-align-right"></i>
+      </button>
+    </div>
+
+    <!-- 행/열 크기 조절 (너비/높이) -->
+    <div class="flex items-center space-x-2 border-r border-gray-300 pr-2">
+      <div class="flex items-center space-x-1" title="열 너비 설정">
+        <span class="text-gray-500 font-medium">너비:</span>
+        <input type="number" id="col-width-input" min="40" max="500" value="96" onchange="applyColumnWidth(this.value)" class="w-14 px-1 py-0.5 border border-gray-300 rounded text-center outline-none focus:border-blue-500">
+        <span class="text-gray-400">px</span>
+      </div>
+      <div class="flex items-center space-x-1" title="행 높이 설정">
+        <span class="text-gray-500 font-medium">높이:</span>
+        <input type="number" id="row-height-input" min="20" max="200" value="28" onchange="applyRowHeight(this.value)" class="w-14 px-1 py-0.5 border border-gray-300 rounded text-center outline-none focus:border-blue-500">
+        <span class="text-gray-400">px</span>
+      </div>
+    </div>
+
+    <!-- 행/열 추가 삭제 -->
+    <div class="flex items-center space-x-1 border-r border-gray-300 pr-2">
+      <button onclick="addRow()" title="행 아래에 추가" class="px-2 py-1 bg-white hover:bg-gray-100 border border-gray-300 rounded text-gray-700 font-medium flex items-center gap-1 shadow-sm">
+        <i class="fa-solid fa-plus text-xs text-emerald-600"></i> 행 추가
+      </button>
+      <button onclick="addColumn()" title="열 오른쪽에 추가" class="px-2 py-1 bg-white hover:bg-gray-100 border border-gray-300 rounded text-gray-700 font-medium flex items-center gap-1 shadow-sm">
+        <i class="fa-solid fa-plus text-xs text-emerald-600"></i> 열 추가
+      </button>
+      <button onclick="deleteRow()" title="현재 행 삭제" class="px-2 py-1 bg-white hover:bg-red-50 border border-gray-300 hover:border-red-300 rounded text-red-600 font-medium flex items-center gap-1 shadow-sm">
+        <i class="fa-solid fa-minus text-xs"></i> 행 삭제
+      </button>
+      <button onclick="deleteColumn()" title="현재 열 삭제" class="px-2 py-1 bg-white hover:bg-red-50 border border-gray-300 hover:border-red-300 rounded text-red-600 font-medium flex items-center gap-1 shadow-sm">
+        <i class="fa-solid fa-minus text-xs"></i> 열 삭제
+      </button>
+    </div>
+
+    <!-- 수식 도우미 버튼 -->
+    <div class="flex items-center space-x-1">
+      <span class="text-xs font-semibold text-gray-500 mr-1">빠른 수식:</span>
+      <button onclick="insertFormula('SUM')" class="px-1.5 py-0.5 bg-gray-200 hover:bg-gray-300 rounded text-xs text-gray-700 font-semibold">SUM</button>
+      <button onclick="insertFormula('AVERAGE')" class="px-1.5 py-0.5 bg-gray-200 hover:bg-gray-300 rounded text-xs text-gray-700 font-semibold">AVG</button>
+      <button onclick="insertFormula('MAX')" class="px-1.5 py-0.5 bg-gray-200 hover:bg-gray-300 rounded text-xs text-gray-700 font-semibold">MAX</button>
+      <button onclick="insertFormula('MIN')" class="px-1.5 py-0.5 bg-gray-200 hover:bg-gray-300 rounded text-xs text-gray-700 font-semibold">MIN</button>
+      <button onclick="insertFormula('COUNT')" class="px-1.5 py-0.5 bg-gray-200 hover:bg-gray-300 rounded text-xs text-gray-700 font-semibold">COUNT</button>
+    </div>
+  </div>
+
+  <!-- 수식 입력줄 (Formula Bar) -->
+  <div class="bg-white border-b border-gray-200 px-3 py-1.5 flex items-center space-x-2">
+    <!-- 셀 좌표 표시 -->
+    <div id="cell-coordinate" class="w-16 font-mono font-bold text-center text-gray-700 border-r border-gray-300 pr-2 select-none">A1</div>
+    <!-- fx 아이콘 -->
+    <div class="text-gray-400 italic font-serif font-bold text-base select-none px-1">
+      fx
+    </div>
+    <!-- 수식 입력 창 -->
+    <input id="formula-input" type="text" placeholder="값 또는 수식을 입력하세요 (예: =SUM(A1:A5))" class="w-full text-gray-800 outline-none px-2 py-0.5 bg-transparent font-mono text-sm focus:bg-blue-50/40 rounded transition">
+  </div>
+
+  <!-- 메인 스프레드시트 그리드 영역 -->
+  <div class="flex-1 overflow-auto relative bg-gray-200" id="grid-container">
+    <table class="border-collapse bg-white table-fixed w-full min-w-max select-none" id="spreadsheet">
+      <thead id="grid-header"></thead>
+      <tbody id="grid-body"></tbody>
+    </table>
+  </div>
+
+  <!-- 하단 상태 바 -->
+  <footer class="bg-gray-100 border-t border-gray-300 px-4 py-1.5 flex justify-between items-center text-xs text-gray-600">
+    <div class="flex items-center space-x-4">
+      <span>행 수: <strong id="total-rows">30</strong></span>
+      <span>열 수: <strong id="total-cols">15</strong></span>
+    </div>
+    <div class="flex items-center space-x-4" id="quick-stats">
+      <span>선택 개수: <strong id="stat-count">1</strong></span>
+      <span>합계: <strong id="stat-sum">0</strong></span>
+      <span>평균: <strong id="stat-avg">0.00</strong></span>
+    </div>
+  </footer>
+
+  <!-- JavaScript 애플리케이션 로직 -->
+  <script>
+    let numRows = 30;
+    let numCols = 15;
+
+    const colWidths = {};
+    const rowHeights = {};
+    const cellData = {};
+    
+    let activeCellId = 'A1';
+    let isMouseDown = false;
+    let selectionStartCell = null;
+    let selectedCellIds = new Set(['A1']);
+    let isResizing = false;
+
+    window.onload = () => {
+      buildGrid();
+      setActiveCell('A1');
+      setupFormulaInput();
+      setupGlobalKeyShortcuts();
+      updateStatusMsg('준비됨');
+    };
+
+    function getColumnLabel(index) {
+      let label = '';
+      let i = index;
+      while (i >= 0) {
+        label = String.fromCharCode((i % 26) + 65) + label;
+        i = Math.floor(i / 26) - 1;
+      }
+      return label;
+    }
+
+    function columnLabelToIndex(label) {
+      let index = 0;
+      for (let i = 0; i < label.length; i++) {
+        index = index * 26 + (label.charCodeAt(i) - 64);
+      }
+      return index - 1;
+    }
+
+    function buildGrid() {
+      const headerEl = document.getElementById('grid-header');
+      const bodyEl = document.getElementById('grid-body');
+
+      document.getElementById('total-rows').innerText = numRows;
+      document.getElementById('total-cols').innerText = numCols;
+
+      let headerHTML = '<tr><th class="header-cell w-12 border-b border-r bg-gray-200"></th>';
+      for (let c = 0; c < numCols; c++) {
+        const colLabel = getColumnLabel(c);
+        const w = colWidths[colLabel] || 96;
+        headerHTML += `
+          <th class="header-cell px-2 py-1 border-b border-r border-gray-300 text-center select-none" 
+              data-col="${colLabel}" 
+              style="width: ${w}px; min-width: ${w}px; max-width: ${w}px;">
+            ${colLabel}
+            <div class="col-resizer" onmousedown="initColResize(event, '${colLabel}')"></div>
+          </th>`;
+      }
+      headerHTML += '</tr>';
+      headerEl.innerHTML = headerHTML;
+
+      let bodyHTML = '';
+      for (let r = 1; r <= numRows; r++) {
+        const h = rowHeights[r] || 28;
+        bodyHTML += `<tr>
+          <td class="header-cell py-1 text-center font-bold border-b border-r border-gray-300 select-none" 
+              data-row="${r}" 
+              style="height: ${h}px;">
+            ${r}
+            <div class="row-resizer" onmousedown="initRowResize(event, ${r})"></div>
+          </td>`;
+        for (let c = 0; c < numCols; c++) {
+          const colLabel = getColumnLabel(c);
+          const cellId = `${colLabel}${r}`;
+          const w = colWidths[colLabel] || 96;
+          
+          bodyHTML += `
+            <td id="cell-${cellId}" 
+                data-id="${cellId}" 
+                contenteditable="true" 
+                tabindex="0"
+                class="grid-cell border-b border-r border-gray-200 px-1.5 py-1 text-xs text-gray-800 focus:outline-none transition-colors duration-75"
+                style="width: ${w}px; min-width: ${w}px; max-width: ${w}px; height: ${h}px;"
+                onfocus="onCellFocus('${cellId}')"
+                onblur="onCellBlur('${cellId}')"
+                onkeydown="onCellKeyDown(event, '${cellId}')"
+                onmousedown="onCellMouseDown(event, '${cellId}')"
+                onmouseenter="onCellMouseEnter(event, '${cellId}')">
+            </td>`;
+        }
+        bodyHTML += '</tr>';
+      }
+      bodyEl.innerHTML = bodyHTML;
+
+      document.addEventListener('mouseup', () => {
+        isMouseDown = false;
+      });
+
+      renderAllCells();
+    }
+
+    function onCellFocus(cellId) {
+      setActiveCell(cellId);
+    }
+
+    function onCellBlur(cellId) {
+      const el = document.getElementById(`cell-${cellId}`);
+      if (!el) return;
+      
+      const textContent = el.innerText.trim();
+      if (!cellData[cellId]) cellData[cellId] = {};
+      
+      if (!textContent) {
+        delete cellData[cellId].raw;
+        delete cellData[cellId].value;
+      } else {
+        cellData[cellId].raw = textContent;
+      }
+
+      recalculateAll();
+      renderCell(cellId);
+    }
+
+    // 단축키 기능이 포함된 셀 키보드 이벤트
+    function onCellKeyDown(e, cellId) {
+      const col = cellId.replace(/[0-9]/g, '');
+      const row = parseInt(cellId.replace(/[A-Z]/g, ''), 10);
+
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.target.blur();
+        if (row < numRows) {
+          const nextCell = document.getElementById(`cell-${col}${row + 1}`);
+          if (nextCell) nextCell.focus();
+        }
+      } else if (e.key === 'Tab') {
+        e.preventDefault();
+        const colIdx = columnLabelToIndex(col);
+        if (e.shiftKey) {
+          if (colIdx > 0) {
+            const prevCell = document.getElementById(`cell-${getColumnLabel(colIdx - 1)}${row}`);
+            if (prevCell) prevCell.focus();
+          }
+        } else {
+          if (colIdx < numCols - 1) {
+            const nextCell = document.getElementById(`cell-${getColumnLabel(colIdx + 1)}${row}`);
+            if (nextCell) nextCell.focus();
+          }
+        }
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        // 편집 중이 아닐 때 선택된 셀 내용 지우기 단축키
+        if (document.activeElement === e.target && e.target.innerText === '') {
+          e.preventDefault();
+          clearSelectedCells();
+        }
+      } else if (e.key === 'Escape') {
+        renderCell(cellId);
+        e.target.blur();
+      }
+    }
+
+    // 전역 단축키 처리 (복사/붙여넣기 등)
+    function setupGlobalKeyShortcuts() {
+      document.addEventListener('keydown', (e) => {
+        // formula input이나 다른 input에 포커스가 있으면 무시
+        if (document.activeElement.tagName === 'INPUT' && document.activeElement.id !== 'formula-input') return;
+
+        // Ctrl + C (복사)
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+          if (activeCellId && cellData[activeCellId]) {
+            const val = cellData[activeCellId].raw || '';
+            navigator.clipboard.writeText(val);
+            updateStatusMsg('셀 내용이 클립보드에 복사되었습니다.');
+          }
+        }
+      });
+    }
+
+    function renderCell(cellId) {
+      const el = document.getElementById(`cell-${cellId}`);
+      if (!el) return;
+
+      const data = cellData[cellId] || {};
+      let displayVal = '';
+      if (data.raw !== undefined && data.raw !== null && data.raw !== '') {
+        if (data.raw.toString().startsWith('=')) {
+          displayVal = evaluateFormula(data.raw);
+          data.value = displayVal;
+        } else {
+          displayVal = data.raw;
+        }
+      }
+      el.innerText = displayVal;
+
+      el.style.fontWeight = data.bold ? 'bold' : 'normal';
+      el.style.fontStyle = data.italic ? 'italic' : 'normal';
+      el.style.textDecoration = data.underline ? 'underline' : 'none';
+      el.style.color = data.color || '#1f2937';
+      el.style.backgroundColor = data.backgroundColor || '#ffffff';
+      el.style.textAlign = data.align || 'left';
+    }
+
+    function renderAllCells() {
+      for (let r = 1; r <= numRows; r++) {
+        for (let c = 0; c < numCols; c++) {
+          const cellId = `${getColumnLabel(c)}${r}`;
+          renderCell(cellId);
+        }
+      }
+    }
+
+    function recalculateAll() {
+      renderAllCells();
+      updateQuickStats();
+    }
+
+    function updateToolbarState(data) {
+      const btnBold = document.getElementById('btn-bold');
+      const btnItalic = document.getElementById('btn-italic');
+      const btnUnderline = document.getElementById('btn-underline');
+      const textColorPicker = document.getElementById('text-color-picker');
+      const bgColorPicker = document.getElementById('bg-color-picker');
+
+      if (btnBold) btnBold.classList.toggle('bg-gray-300', !!data.bold);
+      if (btnItalic) btnItalic.classList.toggle('bg-gray-300', !!data.italic);
+      if (btnUnderline) btnUnderline.classList.toggle('bg-gray-300', !!data.underline);
+      if (textColorPicker) textColorPicker.value = data.color || '#000000';
+      if (bgColorPicker) bgColorPicker.value = data.backgroundColor || '#ffffff';
+    }
+
+    function updateHeaderHighlights(cellId) {
+      document.querySelectorAll('.header-cell').forEach(el => el.classList.remove('active-header'));
+      
+      const colLabel = cellId.replace(/[0-9]/g, '');
+      const rowNum = cellId.replace(/[A-Z]/g, '');
+
+      const th = document.querySelector(`th[data-col="${colLabel}"]`);
+      const tr = document.querySelector(`td[data-row="${rowNum}"]`);
+
+      if (th) th.classList.add('active-header');
+      if (tr) tr.classList.add('active-header');
+    }
+
+    function initColResize(e, colLabel) {
+      e.preventDefault();
+      e.stopPropagation();
+      isResizing = true;
+      const startX = e.clientX;
+      const startWidth = colWidths[colLabel] || 96;
+
+      const resizerEl = e.target;
+      resizerEl.classList.add('resizing-col');
+
+      const onMouseMove = (moveEvent) => {
+        const delta = moveEvent.clientX - startX;
+        const newWidth = Math.max(40, startWidth + delta);
+        colWidths[colLabel] = newWidth;
+        
+        const th = document.querySelector(`th[data-col="${colLabel}"]`);
+        if (th) {
+          th.style.width = `${newWidth}px`;
+          th.style.minWidth = `${newWidth}px`;
+          th.style.maxWidth = `${newWidth}px`;
+        }
+        for (let r = 1; r <= numRows; r++) {
+          const cell = document.getElementById(`cell-${colLabel}${r}`);
+          if (cell) {
+            cell.style.width = `${newWidth}px`;
+            cell.style.minWidth = `${newWidth}px`;
+            cell.style.maxWidth = `${newWidth}px`;
+          }
+        }
+        const activeCol = activeCellId.replace(/[0-9]/g, '');
+        if (activeCol === colLabel) {
+          document.getElementById('col-width-input').value = newWidth;
+        }
+      };
+
+      const onMouseUp = () => {
+        isResizing = false;
+        resizerEl.classList.remove('resizing-col');
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    }
+
+    function initRowResize(e, rowNum) {
+      e.preventDefault();
+      e.stopPropagation();
+      isResizing = true;
+      const startY = e.clientY;
+      const startHeight = rowHeights[rowNum] || 28;
+
+      const resizerEl = e.target;
+      resizerEl.classList.add('resizing-row');
+
+      const onMouseMove = (moveEvent) => {
+        const delta = moveEvent.clientY - startY;
+        const newHeight = Math.max(20, startHeight + delta);
+        rowHeights[rowNum] = newHeight;
+
+        const rowHeader = document.querySelector(`td[data-row="${rowNum}"]`);
+        if (rowHeader) {
+          rowHeader.style.height = `${newHeight}px`;
+        }
+        for (let c = 0; c < numCols; c++) {
+          const cellId = `${getColumnLabel(c)}${rowNum}`;
+          const cell = document.getElementById(`cell-${cellId}`);
+          if (cell) {
+            cell.style.height = `${newHeight}px`;
+          }
+        }
+        const activeRow = parseInt(activeCellId.replace(/[A-Z]/g, ''), 10);
+        if (activeRow === rowNum) {
+          document.getElementById('row-height-input').value = newHeight;
+        }
+      };
+
+      const onMouseUp = () => {
+        isResizing = false;
+        resizerEl.classList.remove('resizing-row');
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    }
+
+    function applyColumnWidth(val) {
+      const width = Math.max(40, parseInt(val, 10) || 96);
+      const colLabel = activeCellId.replace(/[0-9]/g, '');
+      colWidths[colLabel] = width;
+
+      const th = document.querySelector(`th[data-col="${colLabel}"]`);
+      if (th) {
+        th.style.width = `${width}px`;
+        th.style.minWidth = `${width}px`;
+        th.style.maxWidth = `${width}px`;
+      }
+      for (let r = 1; r <= numRows; r++) {
+        const cell = document.getElementById(`cell-${colLabel}${r}`);
+        if (cell) {
+          cell.style.width = `${width}px`;
+          cell.style.minWidth = `${width}px`;
+          cell.style.maxWidth = `${width}px`;
+        }
+      }
+    }
+
+    function applyRowHeight(val) {
+      const height = Math.max(20, parseInt(val, 10) || 28);
+      const rowNum = parseInt(activeCellId.replace(/[A-Z]/g, ''), 10);
+      rowHeights[rowNum] = height;
+
+      const rowHeader = document.querySelector(`td[data-row="${rowNum}"]`);
+      if (rowHeader) {
+        rowHeader.style.height = `${height}px`;
+      }
+      for (let c = 0; c < numCols; c++) {
+        const cellId = `${getColumnLabel(c)}${rowNum}`;
+        const cell = document.getElementById(`cell-${cellId}`);
+        if (cell) {
+          cell.style.height = `${height}px`;
+        }
+      }
+    }
+
+    function setActiveCell(cellId) {
+      activeCellId = cellId;
+      document.getElementById('cell-coordinate').innerText = cellId;
+
+      clearSelectionHighlights();
+      selectedCellIds.clear();
+      selectedCellIds.add(cellId);
+      highlightSelectedCells();
+
+      const formulaInput = document.getElementById('formula-input');
+      const data = cellData[cellId] || {};
+      formulaInput.value = data.raw || '';
+
+      const colLabel = cellId.replace(/[0-9]/g, '');
+      const rowNum = parseInt(cellId.replace(/[A-Z]/g, ''), 10);
+      document.getElementById('col-width-input').value = colWidths[colLabel] || 96;
+      document.getElementById('row-height-input').value = rowHeights[rowNum] || 28;
+
+      updateToolbarState(data);
+      updateHeaderHighlights(cellId);
+    }
+
+    function onCellMouseDown(e, cellId) {
+      if (e.button !== 0 || isResizing) return;
+      isMouseDown = true;
+      selectionStartCell = cellId;
+      setActiveCell(cellId);
+    }
+
+    function onCellMouseEnter(e, cellId) {
+      if (!isMouseDown || !selectionStartCell || isResizing) return;
+
+      clearSelectionHighlights();
+      selectedCellIds.clear();
+
+      const startCol = columnLabelToIndex(selectionStartCell.replace(/[0-9]/g, ''));
+      const startRow = parseInt(selectionStartCell.replace(/[A-Z]/g, ''), 10);
+      const endCol = columnLabelToIndex(cellId.replace(/[0-9]/g, ''));
+      const endRow = parseInt(cellId.replace(/[A-Z]/g, ''), 10);
+
+      const minCol = Math.min(startCol, endCol);
+      const maxCol = Math.max(startCol, endCol);
+      const minRow = Math.min(startRow, endRow);
+      const maxRow = Math.max(startRow, endRow);
+
+      for (let r = minRow; r <= maxRow; r++) {
+        for (let c = minCol; c <= maxCol; c++) {
+          const id = `${getColumnLabel(c)}${r}`;
+          selectedCellIds.add(id);
+        }
+      }
+      highlightSelectedCells();
+    }
+
+    function highlightSelectedCells() {
+      selectedCellIds.forEach(id => {
+        const el = document.getElementById(`cell-${id}`);
+        if (el && id !== activeCellId) {
+          el.classList.add('cell-selected');
+        }
+      });
+      updateQuickStats();
+    }
+
+    function clearSelectionHighlights() {
+      document.querySelectorAll('.grid-cell').forEach(el => el.classList.remove('cell-selected'));
+    }
+
+    function setupFormulaInput() {
+      const input = document.getElementById('formula-input');
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          if (!cellData[activeCellId]) cellData[activeCellId] = {};
+          cellData[activeCellId].raw = input.value;
+          recalculateAll();
+          renderCell(activeCellId);
+          input.blur();
+        }
+      });
+    }
+
+    function evaluateFormula(formulaStr) {
+      try {
+        let expr = formulaStr.substring(1).toUpperCase().trim();
+
+        expr = expr.replace(/(SUM|AVERAGE|AVG|MAX|MIN|COUNT)\(([A-Z]+[0-9]+):([A-Z]+[0-9]+)\)/g, (match, func, start, end) => {
+          const values = getRangeValues(start, end);
+          if (func === 'SUM') return values.reduce((a, b) => a + b, 0);
+          if (func === 'AVERAGE' || func === 'AVG') return values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+          if (func === 'MAX') return values.length ? Math.max(...values) : 0;
+          if (func === 'MIN') return values.length ? Math.min(...values) : 0;
+          if (func === 'COUNT') return values.length;
+          return 0;
+        });
+
+        expr = expr.replace(/([A-Z]+[0-9]+)/g, (match) => {
+          const val = getCellValue(match);
+          const num = parseFloat(val);
+          return isNaN(num) ? `"${val}"` : num;
+        });
+
+        if (/[^0-9\+\-\*\/\(\)\.\s"]/.test(expr)) {
+          return '#VALUE!';
+        }
+
+        const result = Function(`"use strict"; return (${expr})`)();
+        return (typeof result === 'number') ? (Math.round(result * 100000) / 100000) : result;
+      } catch (err) {
+        return '#ERROR!';
+      }
+    }
+
+    function getRangeValues(startCell, endCell) {
+      const startCol = columnLabelToIndex(startCell.replace(/[0-9]/g, ''));
+      const startRow = parseInt(startCell.replace(/[A-Z]/g, ''), 10);
+      const endCol = columnLabelToIndex(endCell.replace(/[0-9]/g, ''));
+      const endRow = parseInt(endCell.replace(/[A-Z]/g, ''), 10);
+
+      const minCol = Math.min(startCol, endCol);
+      const maxCol = Math.max(startCol, endCol);
+      const minRow = Math.min(startRow, endRow);
+      const maxRow = Math.max(startRow, endRow);
+
+      const values = [];
+      for (let r = minRow; r <= maxRow; r++) {
+        for (let c = minCol; c <= maxCol; c++) {
+          const id = `${getColumnLabel(c)}${r}`;
+          const val = parseFloat(getCellValue(id));
+          if (!isNaN(val)) {
+            values.push(val);
+          }
+        }
+      }
+      return values;
+    }
+
+    function getCellValue(cellId) {
+      const data = cellData[cellId];
+      if (!data || data.raw === undefined || data.raw === '') return '';
+      if (data.value !== undefined) return data.value;
+      if (data.raw && data.raw.toString().startsWith('=')) return evaluateFormula(data.raw);
+      return data.raw;
+    }
+
+    function toggleFormat(styleType) {
+      selectedCellIds.forEach(id => {
+        if (!cellData[id]) cellData[id] = {};
+        cellData[id][styleType] = !cellData[id][styleType];
+        renderCell(id);
+      });
+      const activeData = cellData[activeCellId] || {};
+      updateToolbarState(activeData);
+    }
+
+    function applyColor(type, colorValue) {
+      selectedCellIds.forEach(id => {
+        if (!cellData[id]) cellData[id] = {};
+        cellData[id][type] = colorValue;
+        renderCell(id);
+      });
+    }
+
+    function applyAlignment(alignType) {
+      selectedCellIds.forEach(id => {
+        if (!cellData[id]) cellData[id] = {};
+        cellData[id].align = alignType;
+        renderCell(id);
+      });
+    }
+
+    function clearSelectedCells() {
+      selectedCellIds.forEach(id => {
+        if (cellData[id]) {
+          delete cellData[id].raw;
+          delete cellData[id].value;
+        }
+        renderCell(id);
+      });
+      document.getElementById('formula-input').value = '';
+      recalculateAll();
+    }
+
+    function insertFormula(type) {
+      const input = document.getElementById('formula-input');
+      let defaultRange = 'A1:A5';
+      
+      if (selectedCellIds.size > 1) {
+        const ids = Array.from(selectedCellIds);
+        defaultRange = `${ids[0]}:${ids[ids.length - 1]}`;
+      }
+
+      const formulaStr = `=${type}(${defaultRange})`;
+      input.value = formulaStr;
+      input.focus();
+    }
+
+    function addRow() {
+      numRows++;
+      buildGrid();
+      updateStatusMsg('행이 추가되었습니다.');
+    }
+
+    function addColumn() {
+      numCols++;
+      buildGrid();
+      updateStatusMsg('열이 추가되었습니다.');
+    }
+
+    function deleteRow() {
+      if (numRows <= 1) return;
+      numRows--;
+      buildGrid();
+      updateStatusMsg('행이 삭제되었습니다.');
+    }
+
+    function deleteColumn() {
+      if (numCols <= 1) return;
+      numCols--;
+      buildGrid();
+      updateStatusMsg('열이 삭제되었습니다.');
+    }
+
+    function updateQuickStats() {
+      let sum = 0;
+      let count = 0;
+
+      selectedCellIds.forEach(id => {
+        const val = parseFloat(getCellValue(id));
+        if (!isNaN(val)) {
+          sum += val;
+          count++;
+        }
+      });
+
+      const avg = count > 0 ? (sum / count).toFixed(2) : 0;
+
+      document.getElementById('stat-count').innerText = selectedCellIds.size;
+      document.getElementById('stat-sum').innerText = sum.toLocaleString();
+      document.getElementById('stat-avg').innerText = avg;
+    }
+
+    // 빈칸이 0으로 출력되던 현상을 해결한 CSV 내보내기 함수
+    function exportCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+
+      for (let r = 1; r <= numRows; r++) {
+        const rowArr = [];
+        for (let c = 0; c < numCols; c++) {
+          const cellId = `${getColumnLabel(c)}${r}`;
+          const val = getCellValue(cellId);
+          // 값이 없으면 빈 문자열("")로 처리하여 0 대신 빈칸이 나오도록 수정
+          const stringVal = (val !== null && val !== undefined) ? String(val) : "";
+          const escapedVal = `"${stringVal.replace(/"/g, '""')}"`;
+          rowArr.push(escapedVal);
+        }
+        csvContent += rowArr.join(",") + "\r\n";
+      }
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      const title = document.getElementById("doc-title").value || "spreadsheet";
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `${title}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      updateStatusMsg('CSV로 성공적으로 내보냈습니다.');
+    }
+
+    function importCSV(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.split(/\r\n|\n/);
+
+        Object.keys(cellData).forEach(key => delete cellData[key]);
+
+        numRows = Math.max(30, lines.length);
+        let maxColsFound = 15;
+
+        lines.forEach((line, rIdx) => {
+          if (!line.trim()) return;
+          const cells = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').replace(/""/g, '"'));
+          maxColsFound = Math.max(maxColsFound, cells.length);
+
+          cells.forEach((val, cIdx) => {
+            if (val !== "") {
+              const cellId = `${getColumnLabel(cIdx)}${rIdx + 1}`;
+              cellData[cellId] = { raw: val };
+            }
+          });
+        });
+
+        numCols = maxColsFound;
+        buildGrid();
+        recalculateAll();
+        updateStatusMsg('CSV 파일을 성공적으로 불러왔습니다.');
+      };
+      reader.readAsText(file);
+    }
+
+    function updateStatusMsg(msg) {
+      const el = document.getElementById('status-msg');
+      el.innerHTML = `<i class="fa-solid fa-check text-emerald-500 mr-1"></i> ${msg}`;
+      setTimeout(() => {
+        el.innerHTML = `<i class="fa-solid fa-check text-emerald-500 mr-1"></i> 준비됨`;
+      }, 3000);
+    }
+  </script>
+
+</body></html>
